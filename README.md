@@ -12,3 +12,7 @@ Pancake Science is een educatief IoT Proof of Concept dat STEM-principes uitlegt
 
 name: Menoili Mohammed-Riyad
 username: mohammed-riyad248
+
+- name: Liam Luyten
+- username: LiamLuyten-beep
+
