@@ -5,5 +5,5 @@ Pancake Science is een educatief IoT Proof of Concept dat STEM-principes uitlegt
 - name: Asif Benhaddou
 - username: asifbenhaddou
 
-- - name: Marcio Dias Dos Santos
+- name: Marcio Dias Dos Santos
 - username: Max18-debug
