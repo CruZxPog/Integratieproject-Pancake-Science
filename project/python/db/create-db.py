@@ -20,10 +20,10 @@ def create_database():
     )
     cur = db.cursor()
     
-    sql = "CREATE DATABASE IF NOT EXISTS `{DB_NAME}`;"
+    sql = "CREATE DATABASE IF NOT EXISTS pancake_science_db;"
     cur.execute(sql)
 
-    sql = "USE `{DB_NAME}`;"
+    sql = "USE pancake_science_db;"
     cur.execute(sql)
 
     sql = """
