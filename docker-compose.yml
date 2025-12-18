@@ -37,11 +37,11 @@ services:
     container_name: mariadb
     restart: unless-stopped
     environment:
-      TZ: "Europe/Brussels"
-      MARIADB_ROOT_PASSWORD: "pannenkoek_root"
-      MARIADB_DATABASE: "pancake_science_db"
-      MARIADB_USER: "iot_user"
-      MARIADB_PASSWORD: "pannenkoek_app"
+      TZ: ${TZ}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./mariadb_data:/var/lib/mysql
     ports:
@@ -54,7 +54,7 @@ services:
       timeout: 5s
       retries: 10
 
-   db_init:
+  db_init:
     image: mariadb:11
     container_name: db_init
     depends_on:
@@ -69,7 +69,8 @@ services:
       - sh
       - -lc
       - |
-          mariadb -h mariadb -u iot_user -ppannenkoek_app pancake_science_db < /init.sql
+          export MYSQL_PWD="${DB_PASSWORD}"
+          mariadb -h mariadb -u "${DB_USER}" "${DB_NAME}" < /init.sql
 
   myadmin:
     image: phpmyadmin:latest
@@ -85,8 +86,8 @@ services:
       PMA_HOST: "mariadb"
       PMA_PORT: "3306"
       PMA_ARBITRARY: "0"
-      PMA_USER: "iot_user"
-      PMA_PASSWORD: "pannenkoek_app"
+      PMA_USER: ${DB_USER}
+      PMA_PASSWORD: ${DB_PASSWORD}
     networks:
       - iot-net
 
