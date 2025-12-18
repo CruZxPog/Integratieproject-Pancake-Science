@@ -10,6 +10,9 @@ def create_database():
         database=os.getenv("DB_NAME"),
     )
     cur = db.cursor()
+    
+    sql = "CREATE DATABASE IF NOT EXISTS pancake_science_db;"
+    cur.execute(sql)
 
     sql = """
     CREATE TABLE IF NOT EXISTS users (
