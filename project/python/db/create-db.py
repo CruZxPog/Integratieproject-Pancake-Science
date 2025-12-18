@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def create_database():
-    db_name = os.getenv("DB_NAME")
     db_user = os.getenv("DB_USER")
     db_password = os.getenv("DB_PASSWORD")
 
@@ -21,10 +20,10 @@ def create_database():
     )
     cur = db.cursor()
     
-    sql = "CREATE DATABASE IF NOT EXISTS `{db_name}`;"
+    sql = "CREATE DATABASE IF NOT EXISTS `{DB_NAME}`;"
     cur.execute(sql)
 
-    sql = "USE `{db_name}`;"
+    sql = "USE `{DB_NAME}`;"
     cur.execute(sql)
 
     sql = """
