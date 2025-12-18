@@ -5,16 +5,26 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def create_database():
+    db_name = os.getenv("DB_NAME")
+    db_user = os.getenv("DB_USER")
+    db_password = os.getenv("DB_PASSWORD")
+
+    if not db_user or not db_password:
+        raise RuntimeError("Missing DB_USER or DB_PASSWORD. Check your .env loading.")
+
+    # 1) Connect WITHOUT selecting a database (so we can create it)
     db = mysql.connector.connect(
         host=os.getenv("DB_HOST", "127.0.0.1"),
         port=int(os.getenv("DB_PORT", "3306")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME"),
+        user=db_user,
+        password=db_password,
     )
     cur = db.cursor()
     
-    sql = "CREATE DATABASE IF NOT EXISTS pancake_science_db;"
+    sql = "CREATE DATABASE IF NOT EXISTS `{db_name}`;"
+    cur.execute(sql)
+
+    sql = "USE `{db_name}`;"
     cur.execute(sql)
 
     sql = """
