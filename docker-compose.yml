@@ -54,7 +54,7 @@ services:
       timeout: 5s
       retries: 10
 
-  db_init:
+   db_init:
     image: mariadb:11
     container_name: db_init
     depends_on:
@@ -63,60 +63,13 @@ services:
     restart: "no"
     networks:
       - iot-net
+    volumes:
+      - ./db/init.sql:/init.sql:ro
     command:
       - sh
       - -lc
       - |
-          mariadb -h mariadb -u iot_user -ppannenkoek_app pancake_science_db <<'SQL'
-          CREATE TABLE IF NOT EXISTS users (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            username VARCHAR(100) NOT NULL UNIQUE,
-            password_hash VARCHAR(255) NOT NULL
-          );
-
-          CREATE TABLE IF NOT EXISTS programs (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT NOT NULL,
-            name VARCHAR(100) NOT NULL,
-            CONSTRAINT fk_programs_user
-              FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-          );
-
-          CREATE TABLE IF NOT EXISTS sessions (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            program_id INT NOT NULL,
-            start_time TIMESTAMP NOT NULL,
-            end_time TIMESTAMP NULL,
-            CONSTRAINT fk_sessions_program
-              FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
-          );
-
-          CREATE TABLE IF NOT EXISTS program_settings (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            program_id INT NOT NULL,
-            phase VARCHAR(50) NOT NULL,
-            target_temperature FLOAT NOT NULL,
-            CONSTRAINT fk_program_settings_program
-              FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
-            UNIQUE KEY uq_program_phase (program_id, phase)
-          );
-
-          CREATE TABLE IF NOT EXISTS measurements (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            session_id INT NOT NULL,
-            temperature FLOAT NOT NULL,
-            phase VARCHAR(50) NOT NULL,
-            timestamp TIMESTAMP NOT NULL,
-            CONSTRAINT fk_measurements_session
-              FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
-          );
-
-          CREATE INDEX IF NOT EXISTS idx_programs_user_id ON programs(user_id);
-          CREATE INDEX IF NOT EXISTS idx_sessions_program_id ON sessions(program_id);
-          CREATE INDEX IF NOT EXISTS idx_measurements_session_id ON measurements(session_id);
-          CREATE INDEX IF NOT EXISTS idx_measurements_timestamp ON measurements(timestamp);
-          SQL
-
+          mariadb -h mariadb -u iot_user -ppannenkoek_app pancake_science_db < /init.sql
 
   myadmin:
     image: phpmyadmin:latest
