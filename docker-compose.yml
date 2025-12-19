@@ -1,0 +1,96 @@
+name: iotstack
+
+services:
+  nodered:
+    image: nodered/node-red:latest
+    container_name: nodered
+    restart: unless-stopped
+    ports:
+      - "1880:1880"
+    environment:
+      TZ: "Europe/Brussels"
+    volumes:
+      - ./nodered_data:/data
+    depends_on:
+      - mqtt
+      - mariadb
+      - db_init
+    networks:
+      - iot-net
+
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    networks:
+      - iot-net
+
+  mariadb:
+    image: mariadb:11
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - iot-net
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -uroot -p$$MARIADB_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  db_init:
+    image: mariadb:11
+    container_name: db_init
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - iot-net
+    volumes:
+      - ./db/init.sql:/init.sql:ro
+    command:
+      - sh
+      - -lc
+      - |
+          export MYSQL_PWD="${DB_PASSWORD}"
+          mariadb -h mariadb -u "${DB_USER}" "${DB_NAME}" < /init.sql
+
+  myadmin:
+    image: phpmyadmin:latest
+    container_name: myadmin
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    environment:
+      TZ: "Europe/Brussels"
+      PMA_HOST: "mariadb"
+      PMA_PORT: "3306"
+      PMA_ARBITRARY: "0"
+      PMA_USER: ${DB_USER}
+      PMA_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - iot-net
+
+networks:
+  iot-net:
+    name: iot-net
