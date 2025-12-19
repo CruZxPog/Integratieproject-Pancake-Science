@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .create-container {
+            background-color: white;
+            padding: 2rem 3rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            width: 300px;
+            text-align: center;
+        }
+
+        .create-container h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        .create-container input {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .create-container button {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 1rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #2196F3;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        p {
+            margin-top: 1rem;
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="create-container">
+        <h2>Maak een account aan</h2>
+        <input type="text" id="newUser" placeholder="Gebruikersnaam">
+        <input type="password" id="newPass" placeholder="Wachtwoord">
+        <button onclick="createAccount()">Create</button>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        function createAccount() {
+            const user = document.getElementById('newUser').value;
+            const pass = document.getElementById('newPass').value;
+
+            if (user && pass) {
+                document.getElementById('message').innerText = "Account aangemaakt! Je wordt teruggeleid...";
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 1500); // na 1,5 seconden terug naar login
+            } else {
+                document.getElementById('message').innerText = "Vul gebruikersnaam en wachtwoord in.";
+            }
+        }
+    </script>
+</body>
+
+</html>

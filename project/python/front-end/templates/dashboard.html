@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e0f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .dashboard-container {
+            background-color: white;
+            padding: 2rem 3rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .dashboard-container h2 {
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-container button {
+            padding: 1rem 2rem;
+            margin: 1rem;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .dashboard-container button.sessie {
+            background-color: #2196F3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <h2>Kies een optie</h2>
+        <button onclick="start()">Start</button>
+        <button class="sessie" onclick="sessie()">Sessie</button>
+    </div>
+
+    <script>
+        function start() {
+            alert("Start geselecteerd!");
+            // Hier kan je navigeren naar startpagina of andere functionaliteit
+        }
+
+        function sessie() {
+            alert("Sessie geselecteerd!");
+            // Hier kan je navigeren naar sessiepagina of andere functionaliteit
+        }
+    </script>
+</body>
+
+</html>

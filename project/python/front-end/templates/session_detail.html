@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sessie Detail</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding: 0.8rem 1rem;
+            background-color: #e0f7fa;
+            border-radius: 5px;
+        }
+
+        .back-button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            background-color: #2196F3;
+            color: white;
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 id="session-title">Sessie Detail</h2>
+        <div class="data-item">
+            <span>Temperatuur:</span> <span id="temperature">25°C</span>
+        </div>
+        <div class="data-item">
+            <span>Status:</span> <span id="status">Actief</span>
+        </div>
+        <div class="data-item">
+            <span>Starttijd:</span> <span id="start-time">10:00</span>
+        </div>
+        <div class="data-item">
+            <span>Eindtijd:</span> <span id="end-time">12:00</span>
+        </div>
+        <div class="data-item">
+            <span>Programma:</span> <span id="program">Programma 1</span>
+        </div>
+        <button class="back-button" onclick="goBack()">Terug naar Sessie overzicht</button>
+    </div>
+
+    <script>
+        function goBack() {
+            window.location.href = "sessions.html";
+        }
+
+        // Optioneel: sessie naam ophalen uit URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionName = urlParams.get('session');
+        if (sessionName) {
+            document.getElementById('session-title').innerText = sessionName + " Detail";
+
+            // Voor nu statische data, maar hier kan je dynamisch data invullen
+            if (sessionName === "Sessie 1") {
+                document.getElementById('temperature').innerText = "22°C";
+                document.getElementById('status').innerText = "Actief";
+                document.getElementById('start-time').innerText = "09:00";
+                document.getElementById('end-time').innerText = "11:00";
+                document.getElementById('program').innerText = "Programma 1";
+            } else if (sessionName === "Sessie 2") {
+                document.getElementById('temperature').innerText = "24°C";
+                document.getElementById('status').innerText = "Inactief";
+                document.getElementById('start-time').innerText = "12:00";
+                document.getElementById('end-time').innerText = "14:00";
+                document.getElementById('program').innerText = "Programma 2";
+            } else if (sessionName === "Sessie 3") {
+                document.getElementById('temperature').innerText = "20°C";
+                document.getElementById('status').innerText = "Actief";
+                document.getElementById('start-time').innerText = "15:00";
+                document.getElementById('end-time').innerText = "17:00";
+                document.getElementById('program').innerText = "Programma 3";
+            }
+        }
+    </script>
+</body>
+
+</html>
