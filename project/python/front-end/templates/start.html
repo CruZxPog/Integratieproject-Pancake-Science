@@ -12,8 +12,19 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding-top: 50px;
+            padding-top: 60px;
+            /* ruimte voor huisje */
             margin: 0;
+        }
+
+        .home-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 2rem;
+            cursor: pointer;
+            background: none;
+            border: none;
         }
 
         .container {
@@ -22,7 +33,6 @@
             text-align: center;
         }
 
-        /* Max 3 horizontale knoppen */
         .button-row {
             display: flex;
             justify-content: space-around;
@@ -46,44 +56,40 @@
             transform: translateY(-3px);
         }
 
-        .custom-program {
-            width: 100%;
-            padding: 1.5rem;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 8px;
-            background-color: #2196F3;
-            color: white;
-            cursor: pointer;
-            margin-bottom: 15px;
-        }
-
-        .custom-program:hover {
-            transform: translateY(-3px);
-        }
-
+        .custom-program,
         .create-program {
             width: 100%;
             padding: 1.2rem;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             border: none;
             border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .custom-program {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .create-program {
             background-color: #FF9800;
             color: white;
-            cursor: pointer;
         }
 
+        .custom-program:hover,
         .create-program:hover {
             transform: translateY(-3px);
-        }
-
-        h2 {
-            margin-bottom: 20px;
         }
     </style>
 </head>
 
 <body>
+
+    <!-- Huisje link -->
+    <button class="home-button" onclick="goHome()">🏠</button>
+
     <div class="container">
         <h2>Kies een programma</h2>
         <div class="button-row">
@@ -91,13 +97,16 @@
             <button onclick="alert('Programma 2')">Programma 2</button>
             <button onclick="alert('Programma 3')">Programma 3</button>
         </div>
-        <div class="button-row">
-            <button onclick="alert('Programma 1')">Programma 1</button>
-            <button onclick="alert('Programma 2')">Programma 2</button>
-            <button onclick="alert('Programma 3')">Programma 3</button>
-        </div>
+        <button class="custom-program" onclick="alert('Eigen programma maken')">Maak je eigen programma</button>
         <button class="create-program" onclick="alert('Create Program')">Create Program</button>
     </div>
+
+    <script>
+        function goHome() {
+            window.location.href = "dashboard.html";
+        }
+    </script>
+
 </body>
 
 </html>

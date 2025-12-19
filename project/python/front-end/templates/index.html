@@ -62,7 +62,7 @@
         <input type="password" id="password" placeholder="Wachtwoord">
         <div>
             <button onclick="login()">Log in</button>
-            <button class="create" onclick="createAccount()">Create</button>
+            <button class="create" onclick="goToCreate()">Create</button>
         </div>
         <p id="message" style="color:red; margin-top:1rem;"></p>
     </div>
@@ -71,23 +71,15 @@
         function login() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
-            // Hier kan je echte logica toevoegen, bijv. naar server sturen
             if (user && pass) {
-                document.getElementById('message').innerText = "Succesvol ingelogd!";
+                window.location.href = "dashboard.html";
             } else {
                 document.getElementById('message').innerText = "Vul gebruikersnaam en wachtwoord in.";
             }
         }
 
-        function createAccount() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            // Hier kan je echte account-aanmaak logica toevoegen
-            if (user && pass) {
-                document.getElementById('message').innerText = "Account aangemaakt!";
-            } else {
-                document.getElementById('message').innerText = "Vul gebruikersnaam en wachtwoord in.";
-            }
+        function goToCreate() {
+            window.location.href = "create.html";
         }
     </script>
 </body>

@@ -11,6 +11,7 @@
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
+            text-align: center;
         }
 
         .container {
@@ -61,13 +62,13 @@
 </head>
 
 <body>
+
     <div class="container">
-        <h2>Alle sessies</h2>
+        <h2>Alle Sessies</h2>
         <div class="session-list">
-            <div class="session-item" onclick="alert('Sessie 1 geopend')">Sessie 1</div>
-            <div class="session-item" onclick="alert('Sessie 2 geopend')">Sessie 2</div>
-            <div class="session-item" onclick="alert('Sessie 3 geopend')">Sessie 3</div>
-            <!-- Meer sessies kunnen hier toegevoegd worden -->
+            <div class="session-item" onclick="openSession('Sessie 1')">Sessie 1</div>
+            <div class="session-item" onclick="openSession('Sessie 2')">Sessie 2</div>
+            <div class="session-item" onclick="openSession('Sessie 3')">Sessie 3</div>
         </div>
         <button class="back-button" onclick="goBack()">Terug naar Dashboard</button>
     </div>
@@ -75,6 +76,10 @@
     <script>
         function goBack() {
             window.location.href = "dashboard.html";
+        }
+
+        function openSession(name) {
+            window.location.href = "session_detail.html?name=" + encodeURIComponent(name);
         }
     </script>
 </body>

@@ -37,6 +37,11 @@
             cursor: pointer;
             background-color: #4CAF50;
             color: white;
+            transition: transform 0.2s;
+        }
+
+        .dashboard-container button:hover {
+            transform: translateY(-3px);
         }
 
         .dashboard-container button.sessie {
@@ -54,13 +59,13 @@
 
     <script>
         function start() {
-            alert("Start geselecteerd!");
-            // Hier kan je navigeren naar startpagina of andere functionaliteit
+            // Navigeren naar start.html
+            window.location.href = "start.html";
         }
 
         function sessie() {
-            alert("Sessie geselecteerd!");
-            // Hier kan je navigeren naar sessiepagina of andere functionaliteit
+            // Navigeren naar session.html
+            window.location.href = "session.html";
         }
     </script>
 </body>
