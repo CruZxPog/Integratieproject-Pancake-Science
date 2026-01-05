@@ -4,105 +4,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Start Pagina</title>
+    <title>Dashboard</title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            background-color: #f0f0f0;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            padding-top: 60px;
-            /* ruimte voor huisje */
+            align-items: center;
+            height: 100vh;
             margin: 0;
         }
 
-        .home-button {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            font-size: 2rem;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 600px;
+        .login-container {
+            background-color: white;
+            padding: 2rem 3rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            width: 300px;
             text-align: center;
         }
 
-        .button-row {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 30px;
+        .login-container h2 {
+            margin-bottom: 1.5rem;
         }
 
-        .button-row button {
-            flex: 1;
-            margin: 0 10px;
-            padding: 1rem;
-            font-size: 1rem;
+        .login-container button {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.4rem 0;
             border: none;
-            border-radius: 8px;
-            cursor: pointer;
+            border-radius: 5px;
             background-color: #4CAF50;
             color: white;
-            transition: transform 0.2s;
-        }
-
-        .button-row button:hover {
-            transform: translateY(-3px);
-        }
-
-        .custom-program,
-        .create-program {
-            width: 100%;
-            padding: 1.2rem;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 8px;
-            margin-bottom: 15px;
             cursor: pointer;
-            transition: transform 0.2s;
+            font-size: 1rem;
         }
 
-        .custom-program {
+        .login-container button.create {
             background-color: #2196F3;
-            color: white;
-        }
-
-        .create-program {
-            background-color: #FF9800;
-            color: white;
-        }
-
-        .custom-program:hover,
-        .create-program:hover {
-            transform: translateY(-3px);
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Huisje link -->
-    <button class="home-button" onclick="goHome()">🏠</button>
+    <div class="login-container">
+        <h2>Programma's</h2>
 
-    <div class="container">
-        <h2>Kies een programma</h2>
-        <div class="button-row">
-            <button onclick="alert('Programma 1')">Programma 1</button>
-            <button onclick="alert('Programma 2')">Programma 2</button>
-            <button onclick="alert('Programma 3')">Programma 3</button>
-        </div>
-        <button class="create-program" onclick="alert('Create Program')">Create Program</button>
+        <div id="programList"></div>
+
+        <button class="create" onclick="createProgram()">Create program</button>
     </div>
 
     <script>
-        function goHome() {
-            window.location.href = "dashboard.html";
+        let programCount = localStorage.getItem("programCount")
+            ? parseInt(localStorage.getItem("programCount"))
+            : 3;
+
+        const programList = document.getElementById("programList");
+
+        for (let i = 1; i <= programCount; i++) {
+            addProgramButton(i);
+        }
+
+        function createProgram() {
+            programCount++;
+            localStorage.setItem("programCount", programCount);
+            addProgramButton(programCount);
+        }
+
+        function addProgramButton(id) {
+            const btn = document.createElement("button");
+            btn.innerText = "Programma " + id;
+            btn.onclick = () => {
+                window.location.href = `programma.html?id=${id}`;
+            };
+            programList.appendChild(btn);
         }
     </script>
 

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Login Pagina</title>
 
     <style>
         body {
@@ -30,10 +30,18 @@
             margin-bottom: 1.5rem;
         }
 
-        .login-container button {
+        .login-container input {
             width: 100%;
             padding: 0.5rem;
-            margin: 0.4rem 0;
+            margin: 0.5rem 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .login-container button {
+            width: 48%;
+            padding: 0.5rem;
+            margin: 0.5rem 1%;
             border: none;
             border-radius: 5px;
             background-color: #4CAF50;
@@ -51,35 +59,34 @@
 <body>
 
     <div class="login-container">
-        <h2>Programma's</h2>
+        <h2>Login / Create Account</h2>
 
-        <div id="programList"></div>
+        <input type="text" id="username" placeholder="Gebruikersnaam">
+        <input type="password" id="password" placeholder="Wachtwoord">
 
-        <button class="create" onclick="createProgram()">Create program</button>
+        <div>
+            <button onclick="login()">Log in</button>
+            <button class="create" onclick="goToCreate()">Create</button>
+        </div>
+
+        <p id="message" style="color:red; margin-top:1rem;"></p>
     </div>
 
     <script>
-        let programCount = localStorage.getItem("programCount")
-            ? parseInt(localStorage.getItem("programCount"))
-            : 3;
+        function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
 
-        const programList = document.getElementById("programList");
-
-        // bestaande programma’s laden
-        for (let i = 1; i <= programCount; i++) {
-            addProgramButton(i);
+            if (user && pass) {
+                window.location.href = "dashboard.html";
+            } else {
+                document.getElementById('message').innerText =
+                    "Vul gebruikersnaam en wachtwoord in.";
+            }
         }
 
-        function createProgram() {
-            programCount++;
-            localStorage.setItem("programCount", programCount);
-            addProgramButton(programCount);
-        }
-
-        function addProgramButton(number) {
-            const btn = document.createElement("button");
-            btn.innerText = "Programma " + number;
-            programList.appendChild(btn);
+        function goToCreate() {
+            window.location.href = "create.html";
         }
     </script>
 
