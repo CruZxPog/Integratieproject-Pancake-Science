@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Dashboard Programma's</title>
 
     <style>
         body {
@@ -15,6 +15,19 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            padding-top: 20px;
+        }
+
+        /* Terug-knop naar dashboard.html */
+        .back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            text-decoration: none;
+            color: #2196F3;
+            z-index: 1000;
         }
 
         .login-container {
@@ -50,38 +63,36 @@
 
 <body>
 
+    <!-- Huisje/terugknop naar dashboard.html -->
+    <a class="back-button" href="dashboard.html">🏠</a>
+
     <div class="login-container">
         <h2>Programma's</h2>
 
         <div id="programList"></div>
 
-        <button class="create" onclick="createProgram()">Create program</button>
+        <button class="create" onclick="newProgram()">➕ Nieuw programma</button>
     </div>
 
     <script>
-        let programCount = localStorage.getItem("programCount")
-            ? parseInt(localStorage.getItem("programCount"))
-            : 3;
+        // Haal opgeslagen programma's uit localStorage
+        let programs = JSON.parse(localStorage.getItem("programs")) || [];
 
         const programList = document.getElementById("programList");
 
-        for (let i = 1; i <= programCount; i++) {
-            addProgramButton(i);
-        }
-
-        function createProgram() {
-            programCount++;
-            localStorage.setItem("programCount", programCount);
-            addProgramButton(programCount);
-        }
-
-        function addProgramButton(id) {
+        // Toon bestaande programma's
+        programs.forEach((p, i) => {
             const btn = document.createElement("button");
-            btn.innerText = "Programma " + id;
+            btn.innerText = p.name;
             btn.onclick = () => {
-                window.location.href = `programma.html?id=${id}`;
+                window.location.href = `programma.html?id=${i}`;
             };
             programList.appendChild(btn);
+        });
+
+        // Nieuwe programma aanmaken
+        function newProgram() {
+            window.location.href = "programma.html";
         }
     </script>
 
