@@ -53,6 +53,11 @@
         .login-container button.create {
             background-color: #2196F3;
         }
+
+        #message {
+            color: red;
+            margin-top: 1rem;
+        }
     </style>
 </head>
 
@@ -69,20 +74,25 @@
             <button class="create" onclick="goToCreate()">Create</button>
         </div>
 
-        <p id="message" style="color:red; margin-top:1rem;"></p>
+        <p id="message"></p>
     </div>
 
     <script>
         function login() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
 
-            if (user && pass) {
-                window.location.href = "dashboard.html";
-            } else {
-                document.getElementById('message').innerText =
+            if (!user || !pass) {
+                document.getElementById("message").innerText =
                     "Vul gebruikersnaam en wachtwoord in.";
+                return;
             }
+
+            // (demo) gebruiker onthouden
+            localStorage.setItem("username", user);
+
+            // Na login eerst WiFi instellen
+            window.location.href = "wifi.html";
         }
 
         function goToCreate() {
