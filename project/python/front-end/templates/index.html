@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Pagina</title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -52,36 +53,53 @@
         .login-container button.create {
             background-color: #2196F3;
         }
+
+        #message {
+            color: red;
+            margin-top: 1rem;
+        }
     </style>
 </head>
 
 <body>
+
     <div class="login-container">
         <h2>Login / Create Account</h2>
+
         <input type="text" id="username" placeholder="Gebruikersnaam">
         <input type="password" id="password" placeholder="Wachtwoord">
+
         <div>
             <button onclick="login()">Log in</button>
             <button class="create" onclick="goToCreate()">Create</button>
         </div>
-        <p id="message" style="color:red; margin-top:1rem;"></p>
+
+        <p id="message"></p>
     </div>
 
     <script>
         function login() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            if (user && pass) {
-                window.location.href = "dashboard.html";
-            } else {
-                document.getElementById('message').innerText = "Vul gebruikersnaam en wachtwoord in.";
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+
+            if (!user || !pass) {
+                document.getElementById("message").innerText =
+                    "Vul gebruikersnaam en wachtwoord in.";
+                return;
             }
+
+            // (demo) gebruiker onthouden
+            localStorage.setItem("username", user);
+
+            // Na login eerst WiFi instellen
+            window.location.href = "wifi.html";
         }
 
         function goToCreate() {
             window.location.href = "create.html";
         }
     </script>
+
 </body>
 
 </html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programma</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 0;
+            padding-top: 20px;
+        }
+
+        /* Terug-knop linksboven, sticky */
+        .back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            text-decoration: none;
+            color: #2196F3;
+            z-index: 1000;
+        }
+
+        .login-container {
+            background-color: white;
+            padding: 2rem 3rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            width: 320px;
+            text-align: center;
+        }
+
+        input {
+            width: 90%;
+            padding: 0.5rem;
+            margin: 0.3rem 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .phase-container {
+            border: 1px solid #ccc;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.4rem 0;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        button.remove {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Pijl terug naar start.html -->
+    <a class="back-button" href="start.html">◀</a>
+
+    <div class="login-container">
+        <h2>Nieuw programma</h2>
+
+        <input id="name" placeholder="Programmanaam">
+
+        <h3>Fases</h3>
+        <div id="phases"></div>
+
+        <button onclick="addPhase()">➕ Fase toevoegen</button>
+        <button class="remove" onclick="removePhase()">➖ Fase verwijderen</button>
+
+        <button onclick="saveProgram()">💾 Opslaan</button>
+    </div>
+
+    <script>
+        let programs = JSON.parse(localStorage.getItem("programs")) || [];
+        let phases = [];
+
+        // Bestaand programma openen via ?id=
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get("id");
+        if (id !== null) {
+            const p = programs[id];
+            document.getElementById("name").value = p.name;
+            phases = p.phases || [];
+            renderPhases();
+        }
+
+        function addPhase() {
+            phases.push({ name: "Nieuwe fase", targetTemp: "" });
+            renderPhases();
+        }
+
+        function removePhase() {
+            phases.pop();
+            renderPhases();
+        }
+
+        function renderPhases() {
+            const div = document.getElementById("phases");
+            div.innerHTML = "";
+
+            phases.forEach((phase, i) => {
+                const container = document.createElement("div");
+                container.className = "phase-container";
+
+                const title = document.createElement("p");
+                title.innerText = `Fase ${i + 1}`;
+                container.appendChild(title);
+
+                const inputName = document.createElement("input");
+                inputName.placeholder = "Naam van fase";
+                inputName.value = phase.name;
+                inputName.oninput = e => phase.name = e.target.value;
+                container.appendChild(inputName);
+
+                const inputTemp = document.createElement("input");
+                inputTemp.type = "number";
+                inputTemp.placeholder = "Target temperatuur (°C)";
+                inputTemp.value = phase.targetTemp;
+                inputTemp.oninput = e => phase.targetTemp = e.target.value;
+                container.appendChild(inputTemp);
+
+                div.appendChild(container);
+            });
+        }
+
+        function saveProgram() {
+            const name = document.getElementById("name").value || "Nieuw programma";
+
+            const programData = {
+                name,
+                phases
+            };
+
+            if (id !== null) {
+                programs[id] = programData; // bestaand programma overschrijven
+            } else {
+                programs.push(programData); // nieuw programma toevoegen
+            }
+
+            localStorage.setItem("programs", JSON.stringify(programs));
+            window.location.href = "start.html";
+        }
+    </script>
+
+</body>
+
+</html>
