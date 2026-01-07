@@ -23,3 +23,4 @@ Pancake Science is een educatief IoT Proof of Concept dat STEM-principes uitlegt
 - name: Liam Luyten
 - username: LiamLuyten-beep
 
+kjsdqkhjgkj
