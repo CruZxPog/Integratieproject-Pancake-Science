@@ -4,9 +4,12 @@ Pancake Science is een educatief IoT Proof of Concept dat STEM-principes uitlegt
 # Teamleden: 
 - name: André da Cruz Ribeiro
 - username: CruZxPog
+- meow meow meow
 
 - name: Asif Benhaddou
 - username: asifbenhaddou
+- rol: gewoon aanwezig zijn, mentale steun is ook belangrijk.
+  
 
 - name: Seppe De Pauw
 - username: SDP1880
