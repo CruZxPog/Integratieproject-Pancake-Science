@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS measurements (
   temperature FLOAT NOT NULL,
   phase VARCHAR(50) NOT NULL,
   timestamp TIMESTAMP NOT NULL,
+  event CHAR(255) NULL,
   CONSTRAINT fk_measurements_session
     FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
 );
