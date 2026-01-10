@@ -10,10 +10,6 @@ load_dotenv()
 # Connection
 # ----------------------------
 
-print ("DB Host:", os.getenv("DB_HOST"))
-print ("DB Port:", os.getenv("DB_PORT", "8080"))
-
-
 def get_db():
     return mysql.connector.connect(
         host=os.getenv("DB_HOST"),
@@ -36,7 +32,7 @@ def add_user(username, password):
     password_hash = bcrypt.hashpw(
         password.encode("utf-8"),
         bcrypt.gensalt()
-    ).decode("utf-8")  # stored in VARCHAR(255)
+    ).decode("utf-8")
 
     db = get_db()
     cursor = db.cursor()
@@ -56,7 +52,6 @@ def add_user(username, password):
         cursor.close()
         db.close()
 
-
 def get_user_by_username(username):
     db = get_db()
     cursor = db.cursor(dictionary=True)
@@ -69,7 +64,6 @@ def get_user_by_username(username):
     finally:
         cursor.close()
         db.close()
-
 
 def authenticate_user(username, password):
     """
@@ -84,7 +78,6 @@ def authenticate_user(username, password):
         return {"id": user["id"], "username": user["username"]}
 
     return "Invalid username or password"
-
 
 # ----------------------------
 # Programs
@@ -104,7 +97,6 @@ def create_program(user_id, name):
         cursor.close()
         db.close()
 
-
 def get_programs_for_user(user_id):
     db = get_db()
     cursor = db.cursor(dictionary=True)
@@ -122,7 +114,6 @@ def get_programs_for_user(user_id):
     finally:
         cursor.close()
         db.close()
-
 
 def program_belongs_to_user(user_id, program_id):
     db = get_db()
@@ -210,7 +201,6 @@ def create_session(user_id, program_id):
         cursor.close()
         db.close()
 
-
 def end_session(user_id, session_id):
     """
     Ends a session by setting end_time = NOW() (ownership enforced).
@@ -233,7 +223,6 @@ def end_session(user_id, session_id):
         cursor.close()
         db.close()
 
-
 def get_sessions_for_program(user_id, program_id):
     """
     Returns all sessions for a program (ownership enforced).
@@ -255,7 +244,6 @@ def get_sessions_for_program(user_id, program_id):
     finally:
         cursor.close()
         db.close()
-
 
 def get_session(user_id, session_id):
     """
@@ -310,7 +298,6 @@ def get_measurements_for_session(user_id, session_id):
     finally:
         cursor.close()
         db.close()
-
 
 # ----------------------------
 # Program settings (optional helpers)
