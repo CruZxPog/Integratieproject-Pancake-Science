@@ -1,16 +1,19 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template
 from db import add_user, authenticate_user, get_user_by_username, \
-    create_program, get_programs_for_user, create_program_with_settings, \
-    program_belongs_to_user, create_session, end_session, \
-    get_sessions_for_program, get_session, get_measurements_for_session
+    create_program_with_settings, get_programs_for_user, \
+    program_belongs_to_user, create_session, get_sessions_for_program, get_measurements_for_session
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"  # nodig voor sessions/cookies
+app.secret_key = "supersecretkey"
 
-# -----------------------------
+# ----------------------------
+# In-memory WiFi settings voor Raspberry Pi
+# ----------------------------
+WIFI_SETTINGS = {}
+
+# ----------------------------
 # HTML routes
-# -----------------------------
-
+# ----------------------------
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -43,107 +46,110 @@ def session():
 def session_detail():
     return render_template("session_detail.html")
 
-# -----------------------------
-# API endpoints
-# -----------------------------
-
-# Register new user
+# ----------------------------
+# User APIs
+# ----------------------------
 @app.route("/api/register", methods=["POST"])
 def api_register():
     data = request.json
     username = data.get("username")
     password = data.get("password")
-
     if not username or not password:
-        return jsonify({"status": "error", "message": "Vul gebruikersnaam en wachtwoord in"}), 400
+        return jsonify({"status":"error","message":"Vul gebruikersnaam en wachtwoord in"}),400
+    res = add_user(username,password)
+    if isinstance(res,int):
+        return jsonify({"status":"ok","user_id":res})
+    return jsonify({"status":"error","message":res}),400
 
-    res = add_user(username, password)
-    if isinstance(res, int):
-        return jsonify({"status": "ok", "user_id": res})
-    return jsonify({"status": "error", "message": res}), 400
-
-# Login
 @app.route("/api/login", methods=["POST"])
 def api_login():
     data = request.json
     username = data.get("username")
     password = data.get("password")
+    res = authenticate_user(username,password)
+    if isinstance(res,dict):
+        return jsonify({"status":"ok","user":res})
+    return jsonify({"status":"error","message":res}),401
 
-    res = authenticate_user(username, password)
-    if isinstance(res, dict):
-        return jsonify({"status": "ok", "user": res})
-    return jsonify({"status": "error", "message": res}), 401
-
-# Programs
-@app.route("/api/programs", methods=["GET", "POST"])
+# ----------------------------
+# Program APIs
+# ----------------------------
+@app.route("/api/programs", methods=["GET","POST"])
 def api_programs():
-    # user_id uit frontend (in real app: sessie of JWT)
-    user_id = int(request.args.get("user_id", 0))
+    user_id = int(request.args.get("user_id",0))
     if request.method == "GET":
         programs = get_programs_for_user(user_id)
         return jsonify(programs)
-    
     if request.method == "POST":
         data = request.json
         name = data.get("name")
-        phases = data.get("phases", [])
-        res = create_program_with_settings(user_id, name, phases)
-        if isinstance(res, int):
-            return jsonify({"status": "ok", "program_id": res})
-        return jsonify({"status": "error", "message": res}), 400
+        phases = data.get("phases",[])
+        res = create_program_with_settings(user_id,name,phases)
+        if isinstance(res,int):
+            return jsonify({"status":"ok","program_id":res})
+        return jsonify({"status":"error","message":res}),400
 
-# Single program (update)
-@app.route("/api/programs/<int:program_id>", methods=["GET", "PUT"])
+@app.route("/api/programs/<int:program_id>", methods=["GET","PUT"])
 def api_single_program(program_id):
-    user_id = int(request.args.get("user_id", 0))
+    user_id = int(request.args.get("user_id",0))
     if request.method == "GET":
         programs = get_programs_for_user(user_id)
-        program = next((p for p in programs if p["id"] == program_id), None)
+        program = next((p for p in programs if p["id"]==program_id),None)
         if program:
             return jsonify(program)
-        return jsonify({"status": "error", "message": "Programma niet gevonden"}), 404
-    
+        return jsonify({"status":"error","message":"Programma niet gevonden"}),404
     if request.method == "PUT":
         data = request.json
         name = data.get("name")
-        phases = data.get("phases", [])
-        res = create_program_with_settings(user_id, name, phases)
-        if isinstance(res, int):
-            return jsonify({"status": "ok", "program_id": res})
-        return jsonify({"status": "error", "message": res}), 400
+        phases = data.get("phases",[])
+        res = create_program_with_settings(user_id,name,phases)
+        if isinstance(res,int):
+            return jsonify({"status":"ok","program_id":res})
+        return jsonify({"status":"error","message":res}),400
 
-# Sessions
-@app.route("/api/programs/<int:program_id>/sessions", methods=["GET", "POST"])
+# ----------------------------
+# Sessions APIs
+# ----------------------------
+@app.route("/api/programs/<int:program_id>/sessions", methods=["GET","POST"])
 def api_sessions(program_id):
-    user_id = int(request.args.get("user_id", 0))
+    user_id = int(request.args.get("user_id",0))
     if request.method == "GET":
-        sessions = get_sessions_for_program(user_id, program_id)
+        sessions = get_sessions_for_program(user_id,program_id)
         return jsonify(sessions)
-    
     if request.method == "POST":
-        res = create_session(user_id, program_id)
-        if isinstance(res, int):
-            return jsonify({"status": "ok", "session_id": res})
-        return jsonify({"status": "error", "message": res}), 400
+        res = create_session(user_id,program_id)
+        if isinstance(res,int):
+            return jsonify({"status":"ok","session_id":res})
+        return jsonify({"status":"error","message":res}),400
 
-# Measurements
-@app.route("/api/sessions/<int:session_id>/measurements", methods=["GET", "POST"])
+@app.route("/api/sessions/<int:session_id>/measurements", methods=["GET","POST"])
 def api_measurements(session_id):
-    user_id = int(request.args.get("user_id", 0))
+    user_id = int(request.args.get("user_id",0))
     if request.method == "GET":
-        measurements = get_measurements_for_session(user_id, session_id)
+        measurements = get_measurements_for_session(user_id,session_id)
         return jsonify(measurements)
-    
     if request.method == "POST":
-        # Voor ESP32: JSON {"temperature": 195.0, "phase": "cook"}
         data = request.json
-        # Hier kun je code toevoegen om measurements in db te zetten
-        # Nog geen functie in db.py, kan je later toevoegen
-        return jsonify({"status": "ok", "data": data})
+        # TODO: voeg data toe aan database via db.py
+        return jsonify({"status":"ok","data":data})
 
-# -----------------------------
-# Run app
-# -----------------------------
+# ----------------------------
+# WiFi API voor Raspberry Pi
+# ----------------------------
+@app.route("/api/wifi", methods=["POST"])
+def api_wifi():
+    data = request.json
+    ssid = data.get("ssid")
+    password = data.get("password")
+    pi_id = data.get("pi_id","default")
+    if not ssid or not password:
+        return jsonify({"status":"error","message":"SSID of wachtwoord ontbreekt"}),400
+    WIFI_SETTINGS[pi_id] = {"ssid":ssid,"password":password}
+    print(f"[WiFi] Pi {pi_id} -> SSID: {ssid}, Password: {password}")
+    return jsonify({"status":"ok"})
 
-if __name__ == "__main__":
+# ----------------------------
+# Start app
+# ----------------------------
+if __name__=="__main__":
     app.run(debug=True)
