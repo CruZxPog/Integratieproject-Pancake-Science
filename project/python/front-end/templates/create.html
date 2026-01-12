@@ -79,7 +79,7 @@
                 if (data.status === "ok") {
                     msg.style.color = "green";
                     msg.innerText = "Account aangemaakt! Je wordt teruggeleid...";
-                    setTimeout(() => { window.location.href = "index.html"; }, 1500);
+                    setTimeout(() => { window.location.href = "/"; }, 1500);
                 } else {
                     msg.innerText = data.message;
                 }

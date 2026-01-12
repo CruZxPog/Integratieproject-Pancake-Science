@@ -64,11 +64,12 @@
     <a class="back-arrow" href="session.html">◀</a>
     <div class="container">
         <h2 id="session-title">Sessie Detail</h2>
-        <p id="temperature"></p>
-        <p id="status"></p>
+        <p id="program-name"></p>
         <p id="start-time"></p>
         <p id="end-time"></p>
-        <p id="program-name"></p>
+        <p id="temperature"></p>
+        <p id="status"></p>
+
         <button class="back-button" onclick="goBack()">Terug naar overzicht van sessies</button>
     </div>
 
@@ -79,21 +80,34 @@
 
         async function loadSession() {
             try {
-                const res = await fetch(`/api/sessions/${session_id}/measurements?user_id=${user_id}`);
-                const data = await res.json();
-                document.getElementById("session-title").innerText = `Sessie ${session_id} Detail`;
-                if (data.length > 0) {
-                    const last = data[data.length - 1];
+                // Haal sessie info op
+                const sessionRes = await fetch(`/api/sessions/${session_id}?user_id=${user_id}`);
+                const session = await sessionRes.json();
+
+                document.getElementById("session-title").innerText = `Sessie ${session.id} Detail`;
+                document.getElementById("program-name").innerText = `Programma: ${session.program_name}`;
+                document.getElementById("start-time").innerText = `Starttijd: ${session.start_time}`;
+                document.getElementById("end-time").innerText = `Eindtijd: ${session.end_time || 'Nog niet beëindigd'}`;
+
+                // Haal laatste meting op
+                const measurementRes = await fetch(`/api/sessions/${session_id}/measurements?user_id=${user_id}`);
+                const measurements = await measurementRes.json();
+
+                if (measurements.length > 0) {
+                    const last = measurements[measurements.length - 1];
                     document.getElementById("temperature").innerText = `Temperatuur: ${last.temperature}°C`;
                     document.getElementById("status").innerText = `Status: ${last.phase}`;
-                    document.getElementById("start-time").innerText = `Starttijd: ${last.timestamp}`;
                 } else {
                     document.getElementById("temperature").innerText = "Geen metingen beschikbaar";
+                    document.getElementById("status").innerText = "";
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+            }
         }
 
         function goBack() { window.location.href = "session.html"; }
+
         window.onload = loadSession;
     </script>
 </body>
