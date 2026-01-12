@@ -80,13 +80,15 @@
             const wifiPass = document.getElementById("wifiPass").value;
             const consent = document.getElementById("consent").checked;
             const msg = document.getElementById("message");
+
             if (!ssid || !wifiPass) { msg.innerText = "Vul netwerk en wachtwoord in."; return; }
             if (!consent) { msg.innerText = "Je moet toestemming geven om verder te gaan."; return; }
+
             try {
                 const res = await fetch("/api/wifi", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ ssid, password: wifiPass })
+                    body: JSON.stringify({ ssid: ssid, password: wifiPass })
                 });
                 const data = await res.json();
                 if (data.status === "ok") {

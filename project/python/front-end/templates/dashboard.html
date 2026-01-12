@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #e0f7fa;
+            background: #e0f7fa;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -35,6 +35,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            background: #4CAF50;
             color: white;
             transition: transform 0.2s;
         }
@@ -44,11 +45,7 @@
         }
 
         .dashboard-container button.sessie {
-            background-color: #2196F3;
-        }
-
-        .dashboard-container button.start {
-            background-color: #4CAF50;
+            background: #2196F3;
         }
     </style>
 </head>
@@ -56,7 +53,7 @@
 <body>
     <div class="dashboard-container">
         <h2>Kies een optie</h2>
-        <button class="start" onclick="start()">Start</button>
+        <button onclick="start()">Start</button>
         <button class="sessie" onclick="sessie()">Sessie</button>
     </div>
 

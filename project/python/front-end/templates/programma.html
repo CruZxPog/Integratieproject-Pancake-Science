@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background: #f0f0f0;
             display: flex;
             justify-content: center;
             align-items: flex-start;
@@ -70,35 +70,33 @@
 </head>
 
 <body>
-
     <a class="back-button" href="start.html">◀</a>
-
     <div class="login-container">
-        <h2>Programma</h2>
+        <h2>Nieuw programma</h2>
         <input id="name" placeholder="Programmanaam">
         <h3>Fases</h3>
         <div id="phases"></div>
         <button onclick="addPhase()">➕ Fase toevoegen</button>
         <button class="remove" onclick="removePhase()">➖ Fase verwijderen</button>
         <button onclick="saveProgram()">💾 Opslaan</button>
+        <p id="message"></p>
     </div>
 
     <script>
         let phases = [];
         const params = new URLSearchParams(window.location.search);
-        const programId = params.get("id");
+        const id = params.get("id");
         const user_id = localStorage.getItem("user_id");
 
         async function loadProgram() {
-            if (programId) {
-                const res = await fetch(`/api/program/${programId}?user_id=${user_id}`);
+            if (!id) return;
+            try {
+                const res = await fetch(`/api/programs/${id}?user_id=${user_id}`);
                 const data = await res.json();
-                if (data.status === "ok") {
-                    document.getElementById("name").value = data.program.name;
-                    phases = data.program.phases;
-                    renderPhases();
-                }
-            }
+                document.getElementById("name").value = data.name;
+                phases = data.phases || [];
+                renderPhases();
+            } catch (err) { console.error(err); }
         }
 
         function addPhase() { phases.push({ phase: "Nieuwe fase", target_temperature: "" }); renderPhases(); }
@@ -110,32 +108,27 @@
             phases.forEach((p, i) => {
                 const container = document.createElement("div"); container.className = "phase-container";
                 const title = document.createElement("p"); title.innerText = `Fase ${i + 1}`; container.appendChild(title);
-                const inputName = document.createElement("input"); inputName.placeholder = "Naam van fase"; inputName.value = p.phase;
-                inputName.oninput = e => p.phase = e.target.value; container.appendChild(inputName);
-                const inputTemp = document.createElement("input"); inputTemp.type = "number"; inputTemp.placeholder = "Target temperatuur (°C)";
-                inputTemp.value = p.target_temperature; inputTemp.oninput = e => p.target_temperature = e.target.value; container.appendChild(inputTemp);
+                const inputName = document.createElement("input"); inputName.placeholder = "Naam van fase"; inputName.value = p.phase; inputName.oninput = e => p.phase = e.target.value; container.appendChild(inputName);
+                const inputTemp = document.createElement("input"); inputTemp.type = "number"; inputTemp.placeholder = "Target temperatuur (°C)"; inputTemp.value = p.target_temperature; inputTemp.oninput = e => p.target_temperature = e.target.value; container.appendChild(inputTemp);
                 div.appendChild(container);
             });
         }
 
         async function saveProgram() {
             const name = document.getElementById("name").value || "Nieuw programma";
-            const payload = { user_id, name, phases };
-            let url = "/api/program";
-            let method = "POST";
-            if (programId) { payload.program_id = programId; method = "PUT"; }
-
-            try {
-                const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-                const data = await res.json();
-                if (data.status === "ok") { window.location.href = "start.html"; }
-                else { alert(data.message); }
-            } catch (err) { alert("Er is iets misgegaan."); }
+            const data = { name, phases };
+            let res;
+            if (id) {
+                res = await fetch(`/api/programs/${id}?user_id=${user_id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+            } else {
+                res = await fetch(`/api/programs?user_id=${user_id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+            }
+            const result = await res.json();
+            if (result.status === "ok") { window.location.href = "start.html"; } else { document.getElementById("message").innerText = result.message; }
         }
 
-        loadProgram();
+        window.onload = loadProgram;
     </script>
-
 </body>
 
 </html>

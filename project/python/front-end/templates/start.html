@@ -8,10 +8,11 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background: #f0f0f0;
             display: flex;
             justify-content: center;
             align-items: flex-start;
+            height: 100vh;
             margin: 0;
             padding-top: 20px;
         }
@@ -59,9 +60,7 @@
 </head>
 
 <body>
-
     <a class="back-button" href="dashboard.html">🏠</a>
-
     <div class="login-container">
         <h2>Programma's</h2>
         <div id="programList"></div>
@@ -72,27 +71,24 @@
         async function loadPrograms() {
             const user_id = localStorage.getItem("user_id");
             if (!user_id) { window.location.href = "index.html"; return; }
-
             try {
-                const res = await fetch(`/api/programs/${user_id}`);
+                const res = await fetch(`/api/programs?user_id=${user_id}`);
                 const data = await res.json();
-                const programList = document.getElementById("programList");
-                programList.innerHTML = "";
-
-                data.programs.forEach(p => {
+                const list = document.getElementById("programList");
+                list.innerHTML = "";
+                data.forEach(p => {
                     const btn = document.createElement("button");
                     btn.innerText = p.name;
-                    btn.onclick = () => { window.location.href = `programma.html?id=${p.id}`; }
-                    programList.appendChild(btn);
+                    btn.onclick = () => { window.location.href = `programma.html?id=${p.id}`; };
+                    list.appendChild(btn);
                 });
             } catch (err) { console.error(err); }
         }
 
         function newProgram() { window.location.href = "programma.html"; }
 
-        loadPrograms();
+        window.onload = loadPrograms;
     </script>
-
 </body>
 
 </html>
