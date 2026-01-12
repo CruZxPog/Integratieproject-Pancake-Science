@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background: #f0f0f0;
             margin: 0;
             padding: 20px;
             text-align: center;
@@ -33,7 +33,7 @@
         .session-item {
             padding: 1rem;
             border-radius: 8px;
-            background-color: #4CAF50;
+            background: #4CAF50;
             color: white;
             font-size: 1rem;
             cursor: pointer;
@@ -49,7 +49,7 @@
             padding: 1rem 2rem;
             border: none;
             border-radius: 8px;
-            background-color: #2196F3;
+            background: #2196F3;
             color: white;
             cursor: pointer;
             font-size: 1rem;
@@ -65,22 +65,30 @@
 
     <div class="container">
         <h2>Alle Sessies</h2>
-        <div class="session-list">
-            <div class="session-item" onclick="openSession('Sessie 1')">Sessie 1</div>
-            <div class="session-item" onclick="openSession('Sessie 2')">Sessie 2</div>
-            <div class="session-item" onclick="openSession('Sessie 3')">Sessie 3</div>
-        </div>
+        <div class="session-list" id="sessionList"></div>
         <button class="back-button" onclick="goBack()">Terug naar Dashboard</button>
     </div>
 
     <script>
-        function goBack() {
-            window.location.href = "dashboard.html";
+        const user_id = localStorage.getItem("user_id");
+
+        async function loadSessions() {
+            try {
+                const res = await fetch(`/api/sessions/${user_id}`);
+                const data = await res.json();
+                const list = document.getElementById("sessionList"); list.innerHTML = "";
+                data.sessions.forEach(s => {
+                    const div = document.createElement("div"); div.className = "session-item";
+                    div.innerText = `Sessie ${s.id} - ${s.start_time}`;
+                    div.onclick = () => { window.location.href = `session_detail.html?id=${s.id}`; };
+                    list.appendChild(div);
+                });
+            } catch (err) { console.error(err); }
         }
 
-        function openSession(name) {
-            window.location.href = "session_detail.html?name=" + encodeURIComponent(name);
-        }
+        function goBack() { window.location.href = "dashboard.html"; }
+
+        loadSessions();
     </script>
 </body>
 

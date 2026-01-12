@@ -78,7 +78,7 @@
     </div>
 
     <script>
-        function login() {
+        async function login() {
             const user = document.getElementById("username").value;
             const pass = document.getElementById("password").value;
 
@@ -88,11 +88,25 @@
                 return;
             }
 
-            // (demo) gebruiker onthouden
-            localStorage.setItem("username", user);
+            try {
+                const res = await fetch("/api/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                const data = await res.json();
 
-            // Na login eerst WiFi instellen
-            window.location.href = "wifi.html";
+                if (data.status === "ok") {
+                    // Sla user info op in localStorage
+                    localStorage.setItem("user_id", data.user.id);
+                    localStorage.setItem("username", data.user.username);
+                    window.location.href = "wifi.html";
+                } else {
+                    document.getElementById("message").innerText = data.message;
+                }
+            } catch (err) {
+                document.getElementById("message").innerText = "Er is iets misgegaan.";
+            }
         }
 
         function goToCreate() {

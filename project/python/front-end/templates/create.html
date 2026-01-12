@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Account</title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -49,9 +50,9 @@
             font-size: 1rem;
         }
 
-        p {
+        #message {
             margin-top: 1rem;
-            color: green;
+            color: red;
         }
     </style>
 </head>
@@ -66,17 +67,34 @@
     </div>
 
     <script>
-        function createAccount() {
+        async function createAccount() {
             const user = document.getElementById('newUser').value;
             const pass = document.getElementById('newPass').value;
 
-            if (user && pass) {
-                document.getElementById('message').innerText = "Account aangemaakt! Je wordt teruggeleid...";
-                setTimeout(() => {
-                    window.location.href = "index.html";
-                }, 1500); // na 1,5 seconden terug naar login
-            } else {
+            if (!user || !pass) {
                 document.getElementById('message').innerText = "Vul gebruikersnaam en wachtwoord in.";
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                const data = await res.json();
+
+                if (data.status === "ok") {
+                    document.getElementById('message').style.color = "green";
+                    document.getElementById('message').innerText = "Account aangemaakt! Je wordt teruggeleid...";
+                    setTimeout(() => {
+                        window.location.href = "index.html";
+                    }, 1500);
+                } else {
+                    document.getElementById('message').innerText = data.message;
+                }
+            } catch (err) {
+                document.getElementById('message').innerText = "Er is iets misgegaan.";
             }
         }
     </script>

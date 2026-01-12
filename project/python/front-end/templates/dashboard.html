@@ -17,7 +17,7 @@
         }
 
         .dashboard-container {
-            background-color: white;
+            background: white;
             padding: 2rem 3rem;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
@@ -35,7 +35,6 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            background-color: #4CAF50;
             color: white;
             transition: transform 0.2s;
         }
@@ -47,26 +46,23 @@
         .dashboard-container button.sessie {
             background-color: #2196F3;
         }
+
+        .dashboard-container button.start {
+            background-color: #4CAF50;
+        }
     </style>
 </head>
 
 <body>
     <div class="dashboard-container">
         <h2>Kies een optie</h2>
-        <button onclick="start()">Start</button>
+        <button class="start" onclick="start()">Start</button>
         <button class="sessie" onclick="sessie()">Sessie</button>
     </div>
 
     <script>
-        function start() {
-            // Navigeren naar start.html
-            window.location.href = "start.html";
-        }
-
-        function sessie() {
-            // Navigeren naar session.html
-            window.location.href = "session.html";
-        }
+        function start() { window.location.href = "start.html"; }
+        function sessie() { window.location.href = "session.html"; }
     </script>
 </body>
 

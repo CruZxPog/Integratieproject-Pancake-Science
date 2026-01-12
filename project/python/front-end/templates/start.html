@@ -5,20 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Programma's</title>
-
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
+            align-items: flex-start;
             margin: 0;
             padding-top: 20px;
         }
 
-        /* Terug-knop naar dashboard.html */
         .back-button {
             position: fixed;
             top: 10px;
@@ -31,7 +28,7 @@
         }
 
         .login-container {
-            background-color: white;
+            background: white;
             padding: 2rem 3rem;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
@@ -49,51 +46,51 @@
             margin: 0.4rem 0;
             border: none;
             border-radius: 5px;
-            background-color: #4CAF50;
+            background: #4CAF50;
             color: white;
             cursor: pointer;
             font-size: 1rem;
         }
 
         .login-container button.create {
-            background-color: #2196F3;
+            background: #2196F3;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Huisje/terugknop naar dashboard.html -->
     <a class="back-button" href="dashboard.html">🏠</a>
 
     <div class="login-container">
         <h2>Programma's</h2>
-
         <div id="programList"></div>
-
         <button class="create" onclick="newProgram()">➕ Nieuw programma</button>
     </div>
 
     <script>
-        // Haal opgeslagen programma's uit localStorage
-        let programs = JSON.parse(localStorage.getItem("programs")) || [];
+        async function loadPrograms() {
+            const user_id = localStorage.getItem("user_id");
+            if (!user_id) { window.location.href = "index.html"; return; }
 
-        const programList = document.getElementById("programList");
+            try {
+                const res = await fetch(`/api/programs/${user_id}`);
+                const data = await res.json();
+                const programList = document.getElementById("programList");
+                programList.innerHTML = "";
 
-        // Toon bestaande programma's
-        programs.forEach((p, i) => {
-            const btn = document.createElement("button");
-            btn.innerText = p.name;
-            btn.onclick = () => {
-                window.location.href = `programma.html?id=${i}`;
-            };
-            programList.appendChild(btn);
-        });
-
-        // Nieuwe programma aanmaken
-        function newProgram() {
-            window.location.href = "programma.html";
+                data.programs.forEach(p => {
+                    const btn = document.createElement("button");
+                    btn.innerText = p.name;
+                    btn.onclick = () => { window.location.href = `programma.html?id=${p.id}`; }
+                    programList.appendChild(btn);
+                });
+            } catch (err) { console.error(err); }
         }
+
+        function newProgram() { window.location.href = "programma.html"; }
+
+        loadPrograms();
     </script>
 
 </body>
