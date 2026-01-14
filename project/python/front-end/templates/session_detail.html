@@ -8,13 +8,11 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            background: #f5f5f5;
             margin: 0;
             padding: 60px 20px 20px 20px;
-            /* ruimte voor pijl */
         }
 
-        /* Terug-pijl linksboven */
         .back-arrow {
             position: fixed;
             top: 10px;
@@ -30,7 +28,7 @@
             max-width: 600px;
             margin: auto;
             text-align: center;
-            background-color: white;
+            background: white;
             padding: 2rem;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
@@ -50,7 +48,7 @@
             padding: 1rem 2rem;
             border: none;
             border-radius: 8px;
-            background-color: #2196F3;
+            background: #2196F3;
             color: white;
             cursor: pointer;
             font-size: 1rem;
@@ -63,30 +61,54 @@
 </head>
 
 <body>
-
-    <!-- Linker-pijl terug naar session.html -->
     <a class="back-arrow" href="session.html">◀</a>
-
     <div class="container">
         <h2 id="session-title">Sessie Detail</h2>
-        <p>Temperatuur: 25°C</p>
-        <p>Status: Actief</p>
-        <p>Starttijd: 10:00</p>
-        <p>Eindtijd: 12:00</p>
-        <p>Programma: Programma 1</p>
+        <p id="program-name"></p>
+        <p id="start-time"></p>
+        <p id="end-time"></p>
+        <p id="temperature"></p>
+        <p id="status"></p>
+
         <button class="back-button" onclick="goBack()">Terug naar overzicht van sessies</button>
     </div>
 
     <script>
         const params = new URLSearchParams(window.location.search);
-        const sessionName = params.get('name');
-        if (sessionName) {
-            document.getElementById('session-title').innerText = sessionName + " Detail";
+        const session_id = params.get("session_id");
+        const user_id = localStorage.getItem("user_id");
+
+        async function loadSession() {
+            try {
+                // Haal sessie info op
+                const sessionRes = await fetch(`/api/sessions/${session_id}?user_id=${user_id}`);
+                const session = await sessionRes.json();
+
+                document.getElementById("session-title").innerText = `Sessie ${session.id} Detail`;
+                document.getElementById("program-name").innerText = `Programma: ${session.program_name}`;
+                document.getElementById("start-time").innerText = `Starttijd: ${session.start_time}`;
+                document.getElementById("end-time").innerText = `Eindtijd: ${session.end_time || 'Nog niet beëindigd'}`;
+
+                // Haal laatste meting op
+                const measurementRes = await fetch(`/api/sessions/${session_id}/measurements?user_id=${user_id}`);
+                const measurements = await measurementRes.json();
+
+                if (measurements.length > 0) {
+                    const last = measurements[measurements.length - 1];
+                    document.getElementById("temperature").innerText = `Temperatuur: ${last.temperature}°C`;
+                    document.getElementById("status").innerText = `Status: ${last.phase}`;
+                } else {
+                    document.getElementById("temperature").innerText = "Geen metingen beschikbaar";
+                    document.getElementById("status").innerText = "";
+                }
+            } catch (err) {
+                console.error(err);
+            }
         }
 
-        function goBack() {
-            window.location.href = "session.html";
-        }
+        function goBack() { window.location.href = "session.html"; }
+
+        window.onload = loadSession;
     </script>
 </body>
 

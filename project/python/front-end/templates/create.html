@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background: #f0f0f0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -17,7 +17,7 @@
         }
 
         .create-container {
-            background-color: white;
+            background: white;
             padding: 2rem 3rem;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
@@ -43,15 +43,15 @@
             margin-top: 1rem;
             border: none;
             border-radius: 5px;
-            background-color: #2196F3;
+            background: #2196F3;
             color: white;
             cursor: pointer;
             font-size: 1rem;
         }
 
-        p {
+        #create-message {
             margin-top: 1rem;
-            color: green;
+            color: red;
         }
     </style>
 </head>
@@ -62,21 +62,30 @@
         <input type="text" id="newUser" placeholder="Gebruikersnaam">
         <input type="password" id="newPass" placeholder="Wachtwoord">
         <button onclick="createAccount()">Create</button>
-        <p id="message"></p>
+        <p id="create-message"></p>
     </div>
 
     <script>
-        function createAccount() {
+        async function createAccount() {
             const user = document.getElementById('newUser').value;
             const pass = document.getElementById('newPass').value;
+            const msg = document.getElementById('create-message');
 
-            if (user && pass) {
-                document.getElementById('message').innerText = "Account aangemaakt! Je wordt teruggeleid...";
-                setTimeout(() => {
-                    window.location.href = "index.html";
-                }, 1500); // na 1,5 seconden terug naar login
-            } else {
-                document.getElementById('message').innerText = "Vul gebruikersnaam en wachtwoord in.";
+            if (!user || !pass) { msg.innerText = "Vul gebruikersnaam en wachtwoord in."; return; }
+
+            try {
+                const res = await fetch("/api/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: user, password: pass }) });
+                const data = await res.json();
+                if (data.status === "ok") {
+                    msg.style.color = "green";
+                    msg.innerText = "Account aangemaakt! Je wordt teruggeleid...";
+                    setTimeout(() => { window.location.href = "/"; }, 1500);
+                } else {
+                    msg.innerText = data.message;
+                }
+            } catch (err) {
+                console.error(err);
+                msg.innerText = "Er ging iets mis bij registreren";
             }
         }
     </script>

@@ -5,11 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Pagina</title>
-
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background: #f0f0f0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -18,7 +17,7 @@
         }
 
         .login-container {
-            background-color: white;
+            background: white;
             padding: 2rem 3rem;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
@@ -44,14 +43,14 @@
             margin: 0.5rem 1%;
             border: none;
             border-radius: 5px;
-            background-color: #4CAF50;
+            background: #4CAF50;
             color: white;
             cursor: pointer;
             font-size: 1rem;
         }
 
         .login-container button.create {
-            background-color: #2196F3;
+            background: #2196F3;
         }
 
         #message {
@@ -65,39 +64,39 @@
 
     <div class="login-container">
         <h2>Login / Create Account</h2>
-
         <input type="text" id="username" placeholder="Gebruikersnaam">
         <input type="password" id="password" placeholder="Wachtwoord">
-
         <div>
             <button onclick="login()">Log in</button>
             <button class="create" onclick="goToCreate()">Create</button>
         </div>
-
         <p id="message"></p>
     </div>
 
     <script>
-        function login() {
+        async function login() {
             const user = document.getElementById("username").value;
             const pass = document.getElementById("password").value;
+            const msg = document.getElementById("message");
+            if (!user || !pass) { msg.innerText = "Vul gebruikersnaam en wachtwoord in."; return; }
 
-            if (!user || !pass) {
-                document.getElementById("message").innerText =
-                    "Vul gebruikersnaam en wachtwoord in.";
-                return;
+            try {
+                const res = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: user, password: pass }) });
+                const data = await res.json();
+                if (data.status === "ok") {
+                    localStorage.setItem("user_id", data.user.id);
+                    localStorage.setItem("username", data.user.username);
+                    window.location.href = "wifi.html";
+                } else {
+                    msg.innerText = data.message;
+                }
+            } catch (err) {
+                console.error(err);
+                msg.innerText = "Er ging iets mis bij inloggen";
             }
-
-            // (demo) gebruiker onthouden
-            localStorage.setItem("username", user);
-
-            // Na login eerst WiFi instellen
-            window.location.href = "wifi.html";
         }
 
-        function goToCreate() {
-            window.location.href = "create.html";
-        }
+        function goToCreate() { window.location.href = "create.html"; }
     </script>
 
 </body>

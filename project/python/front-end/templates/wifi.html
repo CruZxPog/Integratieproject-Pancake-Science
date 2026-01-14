@@ -5,11 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WiFi instellen</title>
-
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background: #f0f0f0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -18,7 +17,7 @@
         }
 
         .login-container {
-            background-color: white;
+            background: white;
             padding: 2rem 3rem;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
@@ -44,7 +43,7 @@
             margin-top: 1rem;
             border: none;
             border-radius: 5px;
-            background-color: #4CAF50;
+            background: #4CAF50;
             color: white;
             cursor: pointer;
             font-size: 1rem;
@@ -64,54 +63,46 @@
 </head>
 
 <body>
-
     <div class="login-container">
         <h2>WiFi instellen</h2>
-
         <input type="text" id="ssid" placeholder="Netwerknaam (SSID)">
         <input type="password" id="wifiPass" placeholder="WiFi wachtwoord">
-
         <div class="consent">
-            <input type="checkbox" id="consent">
-            Ik geef toestemming om deze gegevens op te slaan.
+            <input type="checkbox" id="consent"> Ik geef toestemming om deze gegevens op te slaan.
         </div>
-
         <button onclick="saveWifi()">Opslaan & doorgaan</button>
-
         <p id="message"></p>
     </div>
 
     <script>
-        function saveWifi() {
+        async function saveWifi() {
             const ssid = document.getElementById("ssid").value;
             const wifiPass = document.getElementById("wifiPass").value;
             const consent = document.getElementById("consent").checked;
+            const msg = document.getElementById("message");
 
-            if (!ssid || !wifiPass) {
-                document.getElementById("message").innerText =
-                    "Vul netwerk en wachtwoord in.";
-                return;
+            if (!ssid || !wifiPass) { msg.innerText = "Vul netwerk en wachtwoord in."; return; }
+            if (!consent) { msg.innerText = "Je moet toestemming geven om verder te gaan."; return; }
+
+            try {
+                const res = await fetch("/api/wifi", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ ssid: ssid, password: wifiPass })
+                });
+                const data = await res.json();
+                if (data.status === "ok") {
+                    alert("WiFi gegevens zijn naar de Raspberry Pi gestuurd!");
+                    window.location.href = "dashboard.html";
+                } else {
+                    msg.innerText = data.message || "Er ging iets mis";
+                }
+            } catch (err) {
+                console.error(err);
+                msg.innerText = "Er is iets misgegaan bij het verzenden";
             }
-
-            if (!consent) {
-                document.getElementById("message").innerText =
-                    "Je moet toestemming geven om verder te gaan.";
-                return;
-            }
-
-            // Opslaan in localStorage (demo)
-            localStorage.setItem("wifi_ssid", ssid);
-            localStorage.setItem("wifi_pass", wifiPass);
-            localStorage.setItem("wifi_consent", "true");
-
-            // Optioneel: korte melding
-            alert("WiFi gegevens opgeslagen!");
-
-            // Redirect naar dashboard
-            window.location.href = "dashboard.html";
         }
     </script>
-
 </body>
 
 </html>
