@@ -8,9 +8,7 @@ Pancake Science is een educatief IoT Proof of Concept dat STEM-principes uitlegt
 
 - name: Asif Benhaddou
 - username: asifbenhaddou
-- rol: gewoon aanwezig zijn, mentale steun is ook belangrijk.
   
-
 - name: Seppe De Pauw
 - username: SDP1880
 
@@ -23,4 +21,4 @@ Pancake Science is een educatief IoT Proof of Concept dat STEM-principes uitlegt
 - name: Liam Luyten
 - username: LiamLuyten-beep
 
-test
+test PR revieuwing: Asif
