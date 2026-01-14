@@ -108,17 +108,20 @@ def api_single_program(program_id):
         return jsonify({"status":"error","message":res}),400
 
 # ----------------------------
-# Sessions APIs
+# Sessions APIs (zonder naam)
 # ----------------------------
 @app.route("/api/programs/<int:program_id>/sessions", methods=["GET","POST"])
 def api_sessions(program_id):
     user_id = int(request.args.get("user_id",0))
+
     if request.method == "GET":
         sessions = get_sessions_for_program(user_id,program_id)
         return jsonify(sessions)
+
     if request.method == "POST":
-        res = create_session(user_id,program_id)
-        if isinstance(res,int):
+        # maak nieuwe sessie
+        res = create_session(user_id, program_id)
+        if isinstance(res, int):
             return jsonify({"status":"ok","session_id":res})
         return jsonify({"status":"error","message":res}),400
 

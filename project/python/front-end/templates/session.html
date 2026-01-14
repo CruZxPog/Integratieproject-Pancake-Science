@@ -48,8 +48,8 @@
             transform: translateY(-3px);
         }
 
-        .back-button {
-            margin-top: 30px;
+        .action-button {
+            margin-top: 20px;
             padding: 1rem 2rem;
             border: none;
             border-radius: 8px;
@@ -59,7 +59,7 @@
             font-size: 1rem;
         }
 
-        .back-button:hover {
+        .action-button:hover {
             transform: translateY(-3px);
         }
     </style>
@@ -73,11 +73,17 @@
         <h2 id="sessionTitle" style="display:none;">Sessies</h2>
         <div class="session-list" id="sessionList"></div>
 
-        <button class="back-button" onclick="goBack()">Terug naar Dashboard</button>
+        <button class="action-button" id="newSessionBtn" style="display:none;">Nieuwe sessie aanmaken</button>
+
+        <button class="action-button" onclick="goBack()">Terug naar Dashboard</button>
     </div>
 
     <script>
         const user_id = localStorage.getItem("user_id");
+        const programListEl = document.getElementById("programList");
+        const sessionListEl = document.getElementById("sessionList");
+        const sessionTitleEl = document.getElementById("sessionTitle");
+        const newSessionBtn = document.getElementById("newSessionBtn");
 
         async function loadPrograms() {
             if (!user_id) { window.location.href = "index.html"; return; }
@@ -85,15 +91,14 @@
             try {
                 const res = await fetch(`/api/programs?user_id=${user_id}`);
                 const programs = await res.json();
-                const programList = document.getElementById("programList");
-                programList.innerHTML = "";
+                programListEl.innerHTML = "";
 
                 programs.forEach(p => {
                     const div = document.createElement("div");
                     div.className = "program-item";
                     div.innerText = p.name;
                     div.onclick = () => loadSessions(p.id, p.name);
-                    programList.appendChild(div);
+                    programListEl.appendChild(div);
                 });
             } catch (err) {
                 console.error(err);
@@ -104,27 +109,50 @@
             try {
                 const res = await fetch(`/api/programs/${programId}/sessions?user_id=${user_id}`);
                 const sessions = await res.json();
-                const sessionList = document.getElementById("sessionList");
-                sessionList.innerHTML = "";
+                sessionListEl.innerHTML = "";
+
+                sessionTitleEl.style.display = "block";
+                sessionTitleEl.innerText = `Sessies van "${programName}"`;
 
                 if (sessions.length === 0) {
-                    sessionList.innerHTML = "<i>Geen sessies gevonden voor dit programma.</i>";
+                    sessionListEl.innerHTML = "<i>Geen sessies gevonden voor dit programma.</i>";
+                    newSessionBtn.style.display = "inline-block";
+                    newSessionBtn.onclick = () => createSession(programId);
                 } else {
-                    sessions.forEach(s => {
+                    newSessionBtn.style.display = "inline-block";
+                    newSessionBtn.onclick = () => createSession(programId);
+
+                    sessions.forEach((s, index) => {
                         const div = document.createElement("div");
                         div.className = "session-item";
-                        div.innerText = s.start_time;
-                        div.onclick = () => { window.location.href = `session_detail.html?session_id=${s.id}`; };
-                        sessionList.appendChild(div);
+                        div.innerText = `Sessie ${index + 1} (${s.start_time})`;
+                        div.onclick = () => {
+                            window.location.href = `session_detail.html?session_id=${s.id}`;
+                        };
+                        sessionListEl.appendChild(div);
                     });
                 }
-
-                const sessionTitle = document.getElementById("sessionTitle");
-                sessionTitle.style.display = "block";
-                sessionTitle.innerText = `Sessies van "${programName}"`;
-
             } catch (err) {
                 console.error(err);
+            }
+        }
+
+        async function createSession(programId) {
+            try {
+                const res = await fetch(`/api/programs/${programId}/sessions?user_id=${user_id}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({})
+                });
+                const data = await res.json();
+                if (data.status === "ok") {
+                    loadSessions(programId, sessionTitleEl.innerText.replace('Sessies van "', '').replace('"', ''));
+                } else {
+                    alert("Kon sessie niet aanmaken: " + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Er is een fout opgetreden bij het aanmaken van de sessie.");
             }
         }
 
