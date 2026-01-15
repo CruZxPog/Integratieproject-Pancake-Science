@@ -300,7 +300,7 @@ def get_measurements_for_session(user_id, session_id):
         db.close()
 
 # ----------------------------
-# Program settings (optional helpers)
+# Program settings
 # ----------------------------
 
 def get_program_settings(user_id, program_id):
