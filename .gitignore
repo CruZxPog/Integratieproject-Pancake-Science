@@ -419,3 +419,4 @@ FodyWeavers.xsd
 
 # user added ignore rules
 venv/
+project/cpp/secret.h
