@@ -192,8 +192,8 @@ def create_session(user_id, program_id):
     cursor = db.cursor()
 
     try:
-        sql = "INSERT INTO sessions (program_id, start_time) VALUES (%s, NOW())"
-        cursor.execute(sql, (program_id,))
+        sql = "INSERT INTO sessions (program_id, session_name, start_time) VALUES (%s, %s, NOW())"
+        cursor.execute(sql, (program_id, "Session"))
         db.commit()
         return cursor.lastrowid
 
@@ -232,7 +232,7 @@ def get_sessions_for_program(user_id, program_id):
 
     try:
         sql = """
-            SELECT s.id, s.start_time, s.end_time
+            SELECT s.id, s.session_name, s.start_time, s.end_time
             FROM sessions s
             JOIN programs p ON p.id = s.program_id
             WHERE s.program_id = %s AND p.user_id = %s

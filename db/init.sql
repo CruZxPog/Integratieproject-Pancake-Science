@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS programs (
 CREATE TABLE IF NOT EXISTS sessions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   program_id INT NOT NULL,
+  session_name VARCHAR(255) NOT NULL,
   start_time TIMESTAMP NOT NULL,
   end_time TIMESTAMP NULL,
   CONSTRAINT fk_sessions_program
