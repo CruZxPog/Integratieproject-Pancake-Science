@@ -5,17 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sessie Details</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
             background: #f0f0f0;
             margin: 0;
             padding: 20px;
-            text-align: center;
         }
 
         .container {
-            max-width: 700px;
+            max-width: 1100px;
             margin: auto;
             text-align: center;
         }
@@ -24,23 +27,8 @@
             margin-bottom: 20px;
         }
 
-        .measurement-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .measurement-item {
-            padding: 1rem;
-            border-radius: 8px;
-            background: #4CAF50;
-            color: white;
-            font-size: 1rem;
-        }
-
         .action-button {
-            margin-top: 20px;
+            margin: 8px;
             padding: 1rem 2rem;
             border: none;
             border-radius: 8px;
@@ -51,20 +39,87 @@
         }
 
         .action-button:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #2196F3;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f2f2f2;
+        }
+
+        #chartContainer {
+            margin-bottom: 40px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            height: 400px;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h2 id="sessionTitle">Sessie Details</h2>
 
-        <div class="measurement-list" id="measurementList"></div>
+        <h2>Sessie Details</h2>
 
-        <button class="action-button" id="startSessionBtn" style="display:none;">Start Sessie</button>
+        <!-- Grafiek bovenaan -->
+        <div id="chartContainer">
+            <canvas id="sessionChart"></canvas>
+        </div>
 
-        <button class="action-button" onclick="goBack()">Terug naar Sessies</button>
+        <!-- Actieknoppen -->
+        <button class="action-button" onclick="downloadCSV()">📥 Download data</button>
+        <button class="action-button" onclick="toggleChart()">📊 Verberg / Toon grafiek</button>
+
+        <!-- Zoekveld -->
+        <input type="text" id="searchInput" placeholder="Zoek op tijd, temperatuur of fase..." onkeyup="filterTable()">
+
+        <!-- Tabel -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Tijd</th>
+                    <th>Temperatuur (°C)</th>
+                    <th>Fase</th>
+                </tr>
+            </thead>
+            <tbody id="measurementTableBody"></tbody>
+        </table>
+
+        <!-- Start-knop -->
+        <button class="action-button" id="startSessionBtn" style="display:none;">
+            Start sessie
+        </button>
+
+        <button class="action-button" onclick="goBack()">Terug</button>
     </div>
 
     <script>
@@ -72,52 +127,140 @@
         const urlParams = new URLSearchParams(window.location.search);
         const session_id = urlParams.get("session_id");
 
-        const measurementListEl = document.getElementById("measurementList");
+        const tableBodyEl = document.getElementById("measurementTableBody");
         const startSessionBtn = document.getElementById("startSessionBtn");
+        const chartContainer = document.getElementById("chartContainer");
+
+        let measurements = [];
+        let chart = null;
 
         async function loadSessionData() {
             try {
                 const res = await fetch(`/api/sessions/${session_id}/measurements?user_id=${user_id}`);
                 const data = await res.json();
 
-                measurementListEl.innerHTML = "";
+                measurements = data;
+                tableBodyEl.innerHTML = "";
 
                 if (data.length === 0) {
-                    // geen data → toon start knop
-                    measurementListEl.innerHTML = "<i>Geen meetdata beschikbaar voor deze sessie.</i>";
                     startSessionBtn.style.display = "inline-block";
                     startSessionBtn.onclick = startSessionOnArduino;
-                } else {
-                    startSessionBtn.style.display = "none";
-                    data.forEach(m => {
-                        const div = document.createElement("div");
-                        div.className = "measurement-item";
-                        div.innerText = `Tijd: ${m.timestamp} | Temp: ${m.temperature} | Fase: ${m.phase}`;
-                        measurementListEl.appendChild(div);
-                    });
+                    return;
                 }
+
+                startSessionBtn.style.display = "none";
+
+                // Tabel vullen
+                data.forEach(m => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                <td>${m.timestamp}</td>
+                <td>${m.temperature}</td>
+                <td>${m.phase}</td>
+            `;
+                    tableBodyEl.appendChild(row);
+                });
+
+                buildChart(); // grafiek opbouwen meteen zichtbaar bovenaan
 
             } catch (err) {
                 console.error(err);
-                measurementListEl.innerHTML = "<i>Fout bij het ophalen van data.</i>";
+                alert("Fout bij ophalen van data");
             }
         }
 
-        async function startSessionOnArduino() {
-            try {
-                const res = await fetch(`/api/start_session_on_arduino?session_id=${session_id}&user_id=${user_id}`, {
-                    method: "POST"
-                });
-                const data = await res.json();
-                if (data.status === "ok") {
-                    alert("Sessie gestart op de Arduino!");
-                    loadSessionData(); // herlaad data
-                } else {
-                    alert("Kon sessie niet starten: " + data.message);
+        /* ===========================
+           📊 GRAFIEK MET EVENT-KLEUR
+        =========================== */
+        function buildChart() {
+            if (measurements.length === 0) return;
+
+            const ctx = document.getElementById("sessionChart").getContext("2d");
+
+            if (chart) chart.destroy();
+
+            // Datapunten kleuren: event = rood, normaal = blauw
+            const pointColors = measurements.map(m => {
+                // pas dit aan afhankelijk van jouw event fases
+                const eventPhases = ["alarm", "start", "stop"];
+                return eventPhases.includes(m.phase.toLowerCase()) ? "red" : "blue";
+            });
+
+            chart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: measurements.map(m => m.timestamp),
+                    datasets: [{
+                        label: "Temperatuur (°C)",
+                        data: measurements.map(m => m.temperature),
+                        borderWidth: 2,
+                        tension: 0.25,
+                        pointBackgroundColor: pointColors,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    }
                 }
-            } catch (err) {
-                console.error(err);
-                alert("Er is een fout opgetreden bij het starten van de sessie.");
+            });
+        }
+
+        function toggleChart() {
+            if (chartContainer.style.display === "none") {
+                chartContainer.style.display = "block";
+                setTimeout(buildChart, 50); // cruciaal voor correcte rendering
+            } else {
+                chartContainer.style.display = "none";
+            }
+        }
+
+        /* ===========================
+           🔍 TABEL ZOEKEN
+        =========================== */
+        function filterTable() {
+            const filter = document.getElementById("searchInput").value.toLowerCase();
+            const rows = tableBodyEl.getElementsByTagName("tr");
+
+            for (let row of rows) {
+                row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+            }
+        }
+
+        /* ===========================
+           📥 CSV
+        =========================== */
+        function downloadCSV() {
+            if (measurements.length === 0) return;
+
+            let csv = "timestamp,temperature,phase\n";
+            measurements.forEach(m => {
+                csv += `${m.timestamp},${m.temperature},${m.phase}\n`;
+            });
+
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `session_${session_id}.csv`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+        }
+
+        async function startSessionOnArduino() {
+            const res = await fetch(`/api/start_session_on_arduino?session_id=${session_id}&user_id=${user_id}`, {
+                method: "POST"
+            });
+            const data = await res.json();
+
+            if (data.status === "ok") {
+                alert("Sessie gestart");
+                loadSessionData();
             }
         }
 
@@ -127,6 +270,7 @@
 
         window.onload = loadSessionData;
     </script>
+
 </body>
 
 </html>

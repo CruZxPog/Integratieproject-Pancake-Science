@@ -180,7 +180,7 @@ def create_program_with_settings(user_id, program_name, phases):
 # Sessions
 # ----------------------------
 
-def create_session(user_id, program_id, start_time):
+def create_session(user_id, program_id, session_name="Session"):
     """
     Starts a new session (ownership enforced).
     Returns new session id or an error message.
@@ -193,7 +193,7 @@ def create_session(user_id, program_id, start_time):
 
     try:
         sql = "INSERT INTO sessions (program_id, session_name, start_time) VALUES (%s, %s, NOW())"
-        cursor.execute(sql, (program_id, "Session"))
+        cursor.execute(sql, (program_id, session_name))
         db.commit()
         return cursor.lastrowid
 

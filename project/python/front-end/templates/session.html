@@ -92,6 +92,9 @@
         let currentProgramId = null;
         let currentProgramName = "";
 
+        // =======================
+        // Programma's laden
+        // =======================
         async function loadPrograms() {
             if (!user_id) {
                 window.location.href = "index.html";
@@ -116,6 +119,9 @@
             }
         }
 
+        // =======================
+        // Sessies laden
+        // =======================
         async function loadSessions(programId, programName) {
             currentProgramId = programId;
             currentProgramName = programName;
@@ -129,7 +135,7 @@
                 sessionTitleEl.innerText = `Sessies van "${programName}"`;
 
                 newSessionBtn.style.display = "inline-block";
-                newSessionBtn.onclick = () => createSession();
+                newSessionBtn.onclick = createSession;
 
                 if (sessions.length === 0) {
                     sessionListEl.innerHTML = "<i>Geen sessies gevonden voor dit programma.</i>";
@@ -139,7 +145,7 @@
                 sessions.forEach(s => {
                     const div = document.createElement("div");
                     div.className = "session-item";
-                    div.innerText = `${s.name} (${s.start_time})`;
+                    div.innerText = `${s.session_name} (${s.start_time})`;
                     div.onclick = () => {
                         window.location.href = `session_detail.html?session_id=${s.id}`;
                     };
@@ -151,19 +157,27 @@
             }
         }
 
+        // =======================
+        // Nieuwe sessie aanmaken
+        // =======================
         async function createSession() {
             const sessionName = prompt("Geef een naam voor de sessie:");
-
             if (!sessionName || sessionName.trim() === "") return;
 
             try {
+                const now = new Date().toISOString(); // start_time automatisch
+
                 const res = await fetch(
-                    `/api/programs/${currentProgramId}/sessions?user_id=${user_id}`,
+                    `/api/programs/${currentProgramId}/sessions`,
                     {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            name: sessionName.trim()
+                            program_id: currentProgramId,       // program_id
+                            session_name: sessionName.trim(),   // naam sessie
+                            start_time: now,                    // huidige tijd
+                            end_time: null,                     // nog geen eindtijd
+                            user_id: user_id                     // optioneel, voor backend
                         })
                     }
                 );
@@ -173,7 +187,7 @@
                 if (data.status === "ok") {
                     loadSessions(currentProgramId, currentProgramName);
                 } else {
-                    alert("Kon sessie niet aanmaken: " + data.message);
+                    alert("Kon sessie niet aanmaken: " + (data.message || "Onbekende fout"));
                 }
             } catch (err) {
                 console.error(err);
@@ -181,6 +195,9 @@
             }
         }
 
+        // =======================
+        // Terug naar dashboard
+        // =======================
         function goBack() {
             window.location.href = "dashboard.html";
         }

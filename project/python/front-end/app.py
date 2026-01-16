@@ -8,11 +8,6 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
 # ----------------------------
-# In-memory WiFi settings voor Raspberry Pi
-# ----------------------------
-WIFI_SETTINGS = {}
-
-# ----------------------------
 # HTML routes
 # ----------------------------
 @app.route("/")
@@ -56,11 +51,11 @@ def api_register():
     username = data.get("username")
     password = data.get("password")
     if not username or not password:
-        return jsonify({"status":"error","message":"Vul gebruikersnaam en wachtwoord in"}),400
+        return jsonify({"status":"error","message":"Vul gebruikersnaam en wachtwoord in"}), 400
     res = add_user(username,password)
     if isinstance(res,int):
         return jsonify({"status":"ok","user_id":res})
-    return jsonify({"status":"error","message":res}),400
+    return jsonify({"status":"error","message":res}), 400
 
 @app.route("/api/login", methods=["POST"])
 def api_login():
@@ -109,40 +104,41 @@ def api_single_program(program_id):
         return jsonify({"status":"error","message":res}),400
 
 # ----------------------------
-# Sessions APIs (zonder naam)
+# Sessions APIs (met session_name)
 # ----------------------------
 @app.route("/api/programs/<int:program_id>/sessions", methods=["GET","POST"])
 def api_sessions(program_id):
-    user_id = int(request.args.get("user_id", 0))
+    user_id = int(request.args.get("user_id",0))
 
     if request.method == "GET":
         sessions = get_sessions_for_program(user_id, program_id)
         return jsonify(sessions)
 
     if request.method == "POST":
-        res = create_session(user_id, program_id)
+        data = request.json
+        session_name = data.get("session_name")
+        if not session_name:
+            return jsonify({"status":"error","message":"Geen session_name opgegeven"}),400
 
-        if not isinstance(res, int):
-            return jsonify({
-                "status": "error",
-                "message": res
-            }), 400
+        session_id = create_session(user_id, program_id, session_name)
 
-        session_id = res
+        if not isinstance(session_id,int):
+            return jsonify({"status":"error","message":session_id}),400
 
+        # stuur naar Arduino via MQTT
         pub_res = publish_program_to_arduino(user_id, program_id, session_id)
         if pub_res is not True:
             return jsonify({
-                "status": "error",
-                "message": f"sessie gemaakt (id={session_id}) maar MQTT sturen faalde: {pub_res}",
-                "session_id": session_id
-            }), 500
+                "status":"error",
+                "message":f"Sessie gemaakt (id={session_id}) maar MQTT sturen faalde: {pub_res}",
+                "session_id":session_id
+            }),500
 
-        return jsonify({
-            "status": "ok",
-            "session_id": session_id
-        })
+        return jsonify({"status":"ok","session_id":session_id})
 
+# ----------------------------
+# Measurements API
+# ----------------------------
 @app.route("/api/sessions/<int:session_id>/measurements", methods=["GET","POST"])
 def api_measurements(session_id):
     user_id = int(request.args.get("user_id",0))
@@ -155,7 +151,7 @@ def api_measurements(session_id):
         return jsonify({"status":"ok","data":data})
 
 # ----------------------------
-# WiFi API voor Raspberry Pi
+# WiFi API
 # ----------------------------
 @app.route("/api/wifi", methods=["POST"])
 def api_wifi():
@@ -165,7 +161,7 @@ def api_wifi():
     pi_id = data.get("pi_id","default")
     if not ssid or not password:
         return jsonify({"status":"error","message":"SSID of wachtwoord ontbreekt"}),400
-    publish_wifi_settings(ssid, password)
+    publish_wifi_settings(ssid,password)
     return jsonify({"status":"ok"})
 
 # ----------------------------
@@ -173,3 +169,4 @@ def api_wifi():
 # ----------------------------
 if __name__=="__main__":
     app.run(debug=True)
+
