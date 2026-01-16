@@ -1,87 +1,243 @@
 #include <Arduino.h>
-
+#include <Wire.h>
+#include <Adafruit_MLX90632.h>
+#include "DFRobot_RGBLCD1602.h"
 #include <WiFi.h>
 #include <MQTTClient.h>
 #include <ArduinoJson.h>
-
 #include "secret.h"
 
+/* ===== ROTARY ENCODER ===== */
+#define outputA 2
+#define outputB 3
+int counter = 0;
+int lastEncoded = 0;
+unsigned long lastStepTime = 0;
+const unsigned long debounceTime = 10;
+
+/* ===== RELAIS ===== */
+#define RELAY_PIN 8
+const double TEMP_THRESHOLD = 37.0; // relais aan boven deze temp
+const double TEMP_HYST = 0.5;       // hysterese om te voorkomen dat relais snel schakelt
+
+/* ===== TEMPERATUURSENSOR ===== */
+Adafruit_MLX90632 mlx = Adafruit_MLX90632();
+
+/* ===== LCD ===== */
+DFRobot_RGBLCD1602 lcd(0x2D, 16, 2);
+
+/* ===== WIFI & MQTT ===== */
 WiFiClient network;
-MQTTClient mqtt = MQTTClient(256);
+MQTTClient mqtt(256);
 
+/* ===== TIMERS ===== */
 unsigned long lastPublishTime = 0;
-unsigned long currentInterval;
+unsigned long lastLCDUpdateTime = 0;
+const unsigned long PUBLISH_INTERVAL = 1000; // 2 sec
+const unsigned long LCD_INTERVAL = 500;      // 0,5 sec
 
-void messageHandler(String &topic, String &payload) {
-    Serial.println("UNO R4 - received from MQTT:");
-    Serial.print("- topic: ");
+/* ===== HUIDIGE WAARDEN ===== */
+int lastCounter = -999;
+double lastTemp = -999.0;
+
+/* ===== FUNCTIES ===== */
+void messageHandler(String &topic, String &payload)
+{
+    Serial.println("Received from MQTT:");
+    Serial.print("Topic: ");
     Serial.println(topic);
-    Serial.print("- payload: ");
+    Serial.print("Payload: ");
     Serial.println(payload);
 
-    if (topic == SUBSCRIBE_TOPIC) {
-        // arduino will get the settings for the session from mqtt broker save the settings temporarily
-        // or the arduino will get a new netword settings from the payload to connect to another network this will only happen on setup so check what kind of payload it is
-        // for now just print the payload
-        Serial.println("UNO R4 - processing payload...");
-        Serial.println(payload);
-    }
+    // relais via MQTT aan/uit zetten
+    if (payload == "ON")
+        digitalWrite(RELAY_PIN, HIGH);
+    if (payload == "OFF")
+        digitalWrite(RELAY_PIN, LOW);
 }
 
-void connectToMQTT() {
-    Serial.print("Connecting to MQTT broker at ");
-    Serial.print(MQTT_BROKER);
-    Serial.print(":");
-    Serial.println(MQTT_PORT);
-
+void connectToMQTT()
+{
     mqtt.begin(MQTT_BROKER, MQTT_PORT, network);
     mqtt.onMessage(messageHandler);
 
-    Serial.println("UNO R4 - Connecting to MQTT broker");
+    Serial.print("Connecting to MQTT...");
+    while (!mqtt.connect(MQTT_CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD))
+    {
+        Serial.print(".");
+        delay(1000);
+    }
+    Serial.println("Connected!");
 
-    while (!mqtt.connect(MQTT_CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD)) {
-        Serial.print("Connect failed. lastError=");
-        Serial.print(mqtt.lastError());
-        Serial.print(" returnCode=");
-        Serial.println(mqtt.returnCode());
-        delay(1000);  // slow down retries so you can read
+    if (mqtt.subscribe(SUBSCRIBE_TOPIC))
+    {
+        Serial.print("Subscribed to: ");
+        Serial.println(SUBSCRIBE_TOPIC);
+    }
+    else
+    {
+        Serial.println("Failed to subscribe.");
+    }
+}
+
+/* ===== SETUP ===== */
+void setup()
+{
+    Serial.begin(115200);
+
+    // Rotary encoder
+    pinMode(outputA, INPUT_PULLUP);
+    pinMode(outputB, INPUT_PULLUP);
+
+    // Relais
+    pinMode(RELAY_PIN, OUTPUT);
+    digitalWrite(RELAY_PIN, LOW);
+
+    // I2C
+    Wire.begin();
+    Wire.setClock(400000);
+
+    // LCD
+    lcd.init();
+    lcd.setCursor(0, 0);
+    lcd.print("System start");
+    lcd.setRGB(0, 255, 0);
+
+    // MLX90632
+    if (!mlx.begin())
+    {
+        lcd.setCursor(0, 1);
+        lcd.print("Sensor fout!");
+        while (1)
+            ;
+    }
+    mlx.setMode(MLX90632_MODE_CONTINUOUS);
+    mlx.setMeasurementSelect(MLX90632_MEAS_MEDICAL);
+    mlx.setRefreshRate(MLX90632_REFRESH_2HZ);
+    mlx.resetNewData();
+
+    delay(1000);
+    lcd.clear();
+
+    // WiFi
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    Serial.print("Connecting to WiFi");
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println();
+    Serial.print("Connected! IP: ");
+    Serial.println(WiFi.localIP());
+
+    // MQTT
+    connectToMQTT();
+}
+
+/* ===== LOOP ===== */
+void loop()
+{
+    unsigned long now = millis();
+
+    // MQTT loop & reconnect
+    mqtt.loop();
+    if (!mqtt.connected() && now - lastPublishTime > 5000)
+    {
+        connectToMQTT();
     }
 
-    Serial.println("UNO R4 - MQTT broker Connected!");
+    /* ===== ROTARY ENCODER ===== */
+    int MSB = digitalRead(outputA);
+    int LSB = digitalRead(outputB);
+    int encoded = (MSB << 1) | LSB;
+    int sum = (lastEncoded << 2) | encoded;
 
-    if (mqtt.subscribe(SUBSCRIBE_TOPIC)) {
-        Serial.print("UNO R4 - Subscribed to the topic: ");
-    } else {
-        Serial.print("UNO R4 - Failed to subscribe to the topic: ");
+    if (now - lastStepTime > debounceTime)
+    {
+        if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011)
+        {
+            counter++;
+            lastStepTime = now;
+        }
+        if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000)
+        {
+            counter--;
+            lastStepTime = now;
+        }
     }
-    Serial.println(SUBSCRIBE_TOPIC);
-}
+    lastEncoded = encoded;
 
-void sendToMQTT(const char* buffer, size_t n) {
-    bool ok = mqtt.publish(PUBLISH_TOPIC, buffer, n);
-    Serial.println("UNO R4 - sent to MQTT:");
-    Serial.print("- topic: ");
-    Serial.println(PUBLISH_TOPIC);
-    Serial.print("- payload: ");
-    Serial.println(buffer);
-    Serial.print("- status: ");
-    Serial.println(ok ? "OK" : "FAILED");
-}
+    /* ===== TEMPERATUUR ===== */
+    double objectTemp = lastTemp;
+    if (mlx.isNewData())
+    {
+        objectTemp = mlx.getObjectTemperature();
+        mlx.resetNewData();
+    }
 
-void setup() {
-  Serial.begin(115200);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-  }
-  Serial.println();
-  Serial.print("Connected! IP address: ");
-  Serial.println(WiFi.localIP());
+    /* ===== RELAIS LOGICA ===== */
+    if (!isnan(objectTemp))
+    {
+        // Hysterese
+        if (objectTemp >= TEMP_THRESHOLD)
+            digitalWrite(RELAY_PIN, HIGH);
+        else if (objectTemp < TEMP_THRESHOLD - TEMP_HYST)
+            digitalWrite(RELAY_PIN, LOW);
+    }
 
-  connectToMQTT();
-}
+    /* ===== LCD UPDATE (alleen bij nieuwe waarde of interval) ===== */
+    if ((objectTemp != lastTemp || counter != lastCounter) || (now - lastLCDUpdateTime > LCD_INTERVAL))
+    {
+        lcd.setCursor(0, 0);
+        lcd.print("Pos: ");
+        lcd.print(counter);
+        lcd.print("    ");
 
-void loop() {
+        lcd.setCursor(0, 1);
+        if (!isnan(objectTemp))
+        {
+            lcd.print("Temp: ");
+            lcd.print(objectTemp, 1);
+            lcd.print((char)223);
+            lcd.print("C ");
+            if (objectTemp >= TEMP_THRESHOLD)
+                lcd.setRGB(255, 0, 0);
+            else
+                lcd.setRGB(0, 255, 0);
+        }
+        else
+            lcd.print("Temp: ---.-C");
+
+        lastLCDUpdateTime = now;
+        lastCounter = counter;
+        lastTemp = objectTemp;
+    }
+
+    /* ===== SERIAL ===== */
+    // Serial.print("Pos: ");
+    // Serial.print(counter);
+    // Serial.print(" | Temp: ");
+    // Serial.println(objectTemp);
+
+    /* ===== MQTT PUBLISH (alleen bij interval) ===== */
+    int session_id = 6; // hardcoded voor nu
+    String event = "running";
+    int phase = counter;
+
+    if (now - lastPublishTime > PUBLISH_INTERVAL)
+    {
+        StaticJsonDocument<128> doc;
+        doc["session_id"] = session_id;
+        doc["temperature"] = objectTemp;
+        doc["phase"] = phase;
+        doc["ts"] = now;
+        doc["event"] = event;
+        char buffer[128];
+        size_t n = serializeJson(doc, buffer);
+        mqtt.publish(PUBLISH_TOPIC, buffer, n);
+        lastPublishTime = now;
+        Serial.println("Published to MQTT:");
+        Serial.println(buffer);
+    }
 }
