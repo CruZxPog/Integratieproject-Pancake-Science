@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from db import add_user, authenticate_user, get_user_by_username, \
     create_program_with_settings, get_programs_for_user, \
     program_belongs_to_user, create_session, get_sessions_for_program, get_measurements_for_session
+from mqtt import publish_program_to_arduino, publish_wifi_settings
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -112,18 +113,35 @@ def api_single_program(program_id):
 # ----------------------------
 @app.route("/api/programs/<int:program_id>/sessions", methods=["GET","POST"])
 def api_sessions(program_id):
-    user_id = int(request.args.get("user_id",0))
+    user_id = int(request.args.get("user_id", 0))
 
     if request.method == "GET":
-        sessions = get_sessions_for_program(user_id,program_id)
+        sessions = get_sessions_for_program(user_id, program_id)
         return jsonify(sessions)
 
     if request.method == "POST":
-        # maak nieuwe sessie
         res = create_session(user_id, program_id)
-        if isinstance(res, int):
-            return jsonify({"status":"ok","session_id":res})
-        return jsonify({"status":"error","message":res}),400
+
+        if not isinstance(res, int):
+            return jsonify({
+                "status": "error",
+                "message": res
+            }), 400
+
+        session_id = res
+
+        pub_res = publish_program_to_arduino(user_id, program_id, session_id)
+        if pub_res is not True:
+            return jsonify({
+                "status": "error",
+                "message": f"sessie gemaakt (id={session_id}) maar MQTT sturen faalde: {pub_res}",
+                "session_id": session_id
+            }), 500
+
+        return jsonify({
+            "status": "ok",
+            "session_id": session_id
+        })
 
 @app.route("/api/sessions/<int:session_id>/measurements", methods=["GET","POST"])
 def api_measurements(session_id):
@@ -147,8 +165,7 @@ def api_wifi():
     pi_id = data.get("pi_id","default")
     if not ssid or not password:
         return jsonify({"status":"error","message":"SSID of wachtwoord ontbreekt"}),400
-    WIFI_SETTINGS[pi_id] = {"ssid":ssid,"password":password}
-    print(f"[WiFi] Pi {pi_id} -> SSID: {ssid}, Password: {password}")
+    publish_wifi_settings(ssid, password)
     return jsonify({"status":"ok"})
 
 # ----------------------------
