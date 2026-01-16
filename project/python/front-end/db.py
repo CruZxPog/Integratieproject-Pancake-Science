@@ -180,7 +180,7 @@ def create_program_with_settings(user_id, program_name, phases):
 # Sessions
 # ----------------------------
 
-def create_session(user_id, program_id):
+def create_session(user_id, program_id, start_time):
     """
     Starts a new session (ownership enforced).
     Returns new session id or an error message.
@@ -254,7 +254,7 @@ def get_session(user_id, session_id):
 
     try:
         sql = """
-            SELECT s.id, s.program_id, s.start_time, s.end_time
+            SELECT s.id, s.program_id, s.session_name, s.start_time, s.end_time
             FROM sessions s
             JOIN programs p ON p.id = s.program_id
             WHERE s.id = %s AND p.user_id = %s
