@@ -253,16 +253,30 @@
         }
 
         async function startSessionOnArduino() {
-            const res = await fetch(`/api/start_session_on_arduino?session_id=${session_id}&user_id=${user_id}`, {
-                method: "POST"
-            });
-            const data = await res.json();
+            try {
+                const res = await fetch(
+                    `/api/sessions/${session_id}/start?user_id=${user_id}`,
+                    { method: "POST" }
+                );
 
-            if (data.status === "ok") {
-                alert("Sessie gestart");
-                loadSessionData();
+                if (!res.ok) {
+                    throw new Error("HTTP " + res.status);
+                }
+
+                const data = await res.json();
+
+                if (data.status === "ok") {
+                    alert("Sessie gestart");
+                    loadSessionData();
+                } else {
+                    alert("Start sessie mislukt");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Serverfout bij starten sessie");
             }
         }
+
 
         function goBack() {
             window.history.back();

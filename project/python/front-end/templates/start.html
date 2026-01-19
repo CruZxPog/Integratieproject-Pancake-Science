@@ -56,11 +56,23 @@
         .login-container button.create {
             background: #2196F3;
         }
+
+        .program-item {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .program-item button.start {
+            background: #4CAF50;
+            width: 100%;
+            margin-top: 0.2rem;
+        }
     </style>
 </head>
 
 <body>
     <a class="back-button" href="dashboard.html">🏠</a>
+
     <div class="login-container">
         <h2>Programma's</h2>
         <div id="programList"></div>
@@ -71,17 +83,50 @@
         async function loadPrograms() {
             const user_id = localStorage.getItem("user_id");
             if (!user_id) { window.location.href = "index.html"; return; }
+
             try {
                 const res = await fetch(`/api/programs?user_id=${user_id}`);
                 const data = await res.json();
                 const list = document.getElementById("programList");
                 list.innerHTML = "";
+
                 data.forEach(p => {
-                    const btn = document.createElement("button");
-                    btn.innerText = p.name;
-                    btn.onclick = () => { window.location.href = `programma.html?id=${p.id}`; };
-                    list.appendChild(btn);
+                    const container = document.createElement("div");
+                    container.className = "program-item";
+
+                    // Knop om programma te openen (editor/fases)
+                    const openBtn = document.createElement("button");
+                    openBtn.innerText = p.name;
+                    openBtn.onclick = () => { window.location.href = `programma.html?id=${p.id}`; };
+                    container.appendChild(openBtn);
+
+                    // Start knop: automatisch nieuwe sessie aanmaken
+                    const startBtn = document.createElement("button");
+                    startBtn.innerText = "▶ Start programma";
+                    startBtn.className = "start";
+                    startBtn.onclick = async () => {
+                        try {
+                            const res = await fetch(`/api/programs/${p.id}/sessions?user_id=${user_id}`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ session_name: `Sessie ${new Date().toLocaleString()}` })
+                            });
+                            const data = await res.json();
+                            if (data.status === "ok") {
+                                window.location.href = `programma.html?id=${p.id}&session=${data.session_id}`;
+                            } else {
+                                alert("Sessie aanmaken mislukt: " + data.message);
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            alert("Fout bij aanmaken sessie");
+                        }
+                    };
+                    container.appendChild(startBtn);
+
+                    list.appendChild(container);
                 });
+
             } catch (err) { console.error(err); }
         }
 

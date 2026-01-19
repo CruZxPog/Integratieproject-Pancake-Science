@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programma</title>
+    <title>Programma's</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,6 +12,7 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
+            height: 100vh;
             margin: 0;
             padding-top: 20px;
         }
@@ -32,16 +33,39 @@
             padding: 2rem 3rem;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            width: 320px;
+            width: 350px;
             text-align: center;
         }
 
-        input {
-            width: 90%;
+        .login-container h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        .login-container button {
+            width: 100%;
             padding: 0.5rem;
-            margin: 0.3rem 0;
+            margin: 0.4rem 0;
+            border: none;
             border-radius: 5px;
-            border: 1px solid #ccc;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .login-container button.create {
+            background: #2196F3;
+        }
+
+        .program-item {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .program-item button.start {
+            background: #4CAF50;
+            width: 100%;
+            margin-top: 0.2rem;
         }
 
         .phase-container {
@@ -52,82 +76,148 @@
             text-align: left;
         }
 
-        button {
-            width: 100%;
+        input {
+            width: 90%;
             padding: 0.5rem;
-            margin: 0.4rem 0;
-            border: none;
+            margin: 0.3rem 0;
             border-radius: 5px;
-            background: #4CAF50;
-            color: white;
-            cursor: pointer;
-        }
-
-        button.remove {
-            background: #f44336;
+            border: 1px solid #ccc;
         }
     </style>
 </head>
 
 <body>
-    <a class="back-button" href="start.html">◀</a>
+    <a class="back-button" href="dashboard.html">🏠</a>
+
     <div class="login-container">
-        <h2>Nieuw programma</h2>
-        <input id="name" placeholder="Programmanaam">
-        <h3>Fases</h3>
-        <div id="phases"></div>
-        <button onclick="addPhase()">➕ Fase toevoegen</button>
-        <button class="remove" onclick="removePhase()">➖ Fase verwijderen</button>
-        <button onclick="saveProgram()">💾 Opslaan</button>
+
+        <h2>Programma's</h2>
+
+        <!-- Lijst van programma's -->
+        <div id="programList"></div>
+        <button class="create" onclick="newProgram()">➕ Nieuw programma</button>
+
+        <!-- Editor voor nieuw programma -->
+        <div id="editor" style="display:none;">
+            <h3>Fases</h3>
+            <div id="phases"></div>
+            <div id="editorButtons">
+                <button onclick="addPhase()">➕ Fase toevoegen</button>
+                <button class="remove" onclick="removePhase()">➖ Fase verwijderen</button>
+                <button onclick="saveProgram()">💾 Opslaan</button>
+            </div>
+        </div>
+
         <p id="message"></p>
     </div>
 
     <script>
-        let phases = [];
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get("id");
         const user_id = localStorage.getItem("user_id");
+        const programList = document.getElementById("programList");
+        const editorContainer = document.getElementById("editor");
+        const phasesDiv = document.getElementById("phases");
 
-        async function loadProgram() {
-            if (!id) return;
+        let phases = [];
+
+        // ---------------------- LAAD PROGRAMMA'S ----------------------
+        async function loadPrograms() {
+            if (!user_id) { window.location.href = "index.html"; return; }
+
             try {
-                const res = await fetch(`/api/programs/${id}?user_id=${user_id}`);
+                const res = await fetch(`/api/programs?user_id=${user_id}`);
                 const data = await res.json();
-                document.getElementById("name").value = data.name;
-                phases = data.phases || [];
-                renderPhases();
+                programList.innerHTML = "";
+
+                data.forEach(p => {
+                    const container = document.createElement("div");
+                    container.className = "program-item";
+
+                    const openBtn = document.createElement("button");
+                    openBtn.innerText = p.name;
+                    openBtn.onclick = () => { window.location.href = `programma.html?id=${p.id}`; };
+                    container.appendChild(openBtn);
+
+                    const startBtn = document.createElement("button");
+                    startBtn.className = "start";
+                    startBtn.innerText = "▶ Start programma";
+                    startBtn.onclick = async () => {
+                        const res = await fetch(`/api/programs/${p.id}/sessions?user_id=${user_id}`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ session_name: `Sessie ${new Date().toLocaleString()}` })
+                        });
+                        const data = await res.json();
+                        if (data.status === "ok") {
+                            window.location.href = `programma.html?id=${p.id}&session=${data.session_id}`;
+                        } else {
+                            alert("Sessie aanmaken mislukt: " + data.message);
+                        }
+                    };
+                    container.appendChild(startBtn);
+
+                    programList.appendChild(container);
+                });
+
             } catch (err) { console.error(err); }
+        }
+
+        // ---------------------- NIEUW PROGRAMMA ----------------------
+        function newProgram() {
+            programList.style.display = "none";
+            document.querySelector(".create").style.display = "none";
+
+            editorContainer.style.display = "block";
+            phases = [];
+            renderPhases();
         }
 
         function addPhase() { phases.push({ phase: "Nieuwe fase", target_temperature: "" }); renderPhases(); }
         function removePhase() { phases.pop(); renderPhases(); }
 
         function renderPhases() {
-            const div = document.getElementById("phases");
-            div.innerHTML = "";
+            phasesDiv.innerHTML = "";
             phases.forEach((p, i) => {
-                const container = document.createElement("div"); container.className = "phase-container";
-                const title = document.createElement("p"); title.innerText = `Fase ${i + 1}`; container.appendChild(title);
-                const inputName = document.createElement("input"); inputName.placeholder = "Naam van fase"; inputName.value = p.phase; inputName.oninput = e => p.phase = e.target.value; container.appendChild(inputName);
-                const inputTemp = document.createElement("input"); inputTemp.type = "number"; inputTemp.placeholder = "Target temperatuur (°C)"; inputTemp.value = p.target_temperature; inputTemp.oninput = e => p.target_temperature = e.target.value; container.appendChild(inputTemp);
-                div.appendChild(container);
+                const container = document.createElement("div");
+                container.className = "phase-container";
+
+                const title = document.createElement("p");
+                title.innerText = `Fase ${i + 1}`;
+                container.appendChild(title);
+
+                const inputName = document.createElement("input");
+                inputName.value = p.phase;
+                inputName.placeholder = "Naam van fase";
+                inputName.oninput = e => p.phase = e.target.value;
+                container.appendChild(inputName);
+
+                const inputTemp = document.createElement("input");
+                inputTemp.type = "number";
+                inputTemp.value = p.target_temperature;
+                inputTemp.placeholder = "Target temperatuur (°C)";
+                inputTemp.oninput = e => p.target_temperature = e.target.value;
+                container.appendChild(inputTemp);
+
+                phasesDiv.appendChild(container);
             });
         }
 
+        // ---------------------- OPSLAAN PROGRAMMA ----------------------
         async function saveProgram() {
-            const name = document.getElementById("name").value || "Nieuw programma";
+            const name = prompt("Naam programma:", "Nieuw programma");
             const data = { name, phases };
-            let res;
-            if (id) {
-                res = await fetch(`/api/programs/${id}?user_id=${user_id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-            } else {
-                res = await fetch(`/api/programs?user_id=${user_id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-            }
+
+            const res = await fetch(`/api/programs?user_id=${user_id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
             const result = await res.json();
-            if (result.status === "ok") { window.location.href = "start.html"; } else { document.getElementById("message").innerText = result.message; }
+            if (result.status === "ok") window.location.href = "start.html";
+            else document.getElementById("message").innerText = result.message;
         }
 
-        window.onload = loadProgram;
+        // ---------------------- INIT ----------------------
+        window.onload = loadPrograms;
     </script>
 </body>
 

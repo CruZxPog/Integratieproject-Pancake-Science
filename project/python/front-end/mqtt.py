@@ -13,7 +13,9 @@ def mqtt_publish(topic, payload_obj, retain=True):
 
     client = mqtt.Client(client_id="flask-pancake")
     client.username_pw_set(mqtt_user, mqtt_pass)
+    print(f"Connecting to MQTT {mqtt_host}:{mqtt_port} as {mqtt_user}")
     client.connect(mqtt_host, mqtt_port, 60)
+    print(f"Publishing to {topic}: {payload}")
     client.publish(topic, payload, qos=1, retain=retain)
     client.disconnect()
 
