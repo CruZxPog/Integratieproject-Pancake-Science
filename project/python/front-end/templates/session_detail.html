@@ -1,255 +1,311 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="nl">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sessie Details</title>
-
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Session detail</title>
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: auto;
-            text-align: center;
-        }
-
-        h2 {
-            margin-bottom: 20px;
-        }
-
-        .action-button {
-            margin: 8px;
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 8px;
-            background: #2196F3;
-            color: white;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .action-button:hover {
-            transform: translateY(-2px);
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin: 15px 0;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 1rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        th,
-        td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            text-align: center;
-        }
-
-        th {
-            background: #2196F3;
-            color: white;
-        }
-
-        tr:hover {
-            background: #f2f2f2;
-        }
-
-        #chartContainer {
-            margin-bottom: 40px;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            height: 400px;
-        }
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 0;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      header {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.15);
+        background: rgba(15, 23, 42, 0.8);
+        position: sticky;
+        top: 0;
+        backdrop-filter: blur(8px);
+        z-index: 5;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .title {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .sub {
+        font-size: 13px;
+        opacity: 0.8;
+      }
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      button {
+        border: 1px solid rgba(226, 232, 240, 0.18);
+        background: rgba(2, 132, 199, 0.18);
+        color: #e2e8f0;
+        padding: 10px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: rgba(2, 132, 199, 0.28);
+      }
+      a {
+        color: #93c5fd;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      main {
+        padding: 18px 20px 28px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .card {
+        background: rgba(30, 41, 59, 0.65);
+        border: 1px solid rgba(226, 232, 240, 0.12);
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      }
+      .meta {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+        font-size: 14px;
+        opacity: 0.95;
+      }
+      .pill {
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(226, 232, 240, 0.14);
+        background: rgba(15, 23, 42, 0.45);
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 14px;
+        color: rgba(226, 232, 240, 0.9);
+      }
+      .chart-wrap {
+        margin-top: 12px;
+      }
+      canvas {
+        width: 100% !important;
+        height: 440px !important;
+      }
+      .hint {
+        margin-top: 10px;
+        font-size: 13px;
+        color: rgba(226, 232, 240, 0.75);
+      }
+      code {
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid rgba(226, 232, 240, 0.14);
+        padding: 2px 6px;
+        border-radius: 8px;
+      }
     </style>
-</head>
 
-<body>
-    <div class="container">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  </head>
 
-        <h2>Sessie Details</h2>
-
-        <!-- Grafiek bovenaan -->
-        <div id="chartContainer">
-            <canvas id="sessionChart"></canvas>
+  <body>
+    <header>
+      <div class="row">
+        <div>
+          <div class="title">Session <span id="uiSessionId">-</span></div>
+          <div class="sub">Temperatuur grafiek met event markers</div>
         </div>
 
-        <!-- Actieknoppen -->
-        <button class="action-button" onclick="downloadCSV()">📥 Download data</button>
-        <button class="action-button" onclick="toggleChart()">📊 Verberg / Toon grafiek</button>
+        <div class="toolbar">
+          <a href="/session.html"><button type="button">Terug</button></a>
+          <button id="btnReload" type="button">Reload</button>
+        </div>
+      </div>
 
-        <!-- Zoekveld -->
-        <input type="text" id="searchInput" placeholder="Zoek op tijd, temperatuur of fase..." onkeyup="filterTable()">
+      <div class="meta">
+        <div class="pill">user_id: <b id="uiUserId">-</b></div>
+        <div class="pill">samples: <b id="uiSamples">-</b></div>
+        <div class="pill">points: <b id="uiPoints">-</b></div>
+      </div>
 
-        <!-- Tabel -->
-        <table>
-            <thead>
-                <tr>
-                    <th>Tijd</th>
-                    <th>Temperatuur (°C)</th>
-                    <th>Fase</th>
-                </tr>
-            </thead>
-            <tbody id="measurementTableBody"></tbody>
-        </table>
+      <div class="status" id="status">Loading...</div>
+    </header>
 
-        <button class="action-button" onclick="goBack()">Terug</button>
-    </div>
+    <main>
+      <div class="card">
+        <div style="font-weight: 700; margin-bottom: 6px;">Temperatuur over tijd</div>
+        <div class="chart-wrap">
+          <canvas id="tempChart"></canvas>
+        </div>
+        <div class="hint">
+          De lijn heeft geen dots. Alleen metingen met <code>event = "point"</code> krijgen een dot.
+        </div>
+      </div>
+    </main>
 
     <script>
-        const user_id = localStorage.getItem("user_id");
-        const urlParams = new URLSearchParams(window.location.search);
-        const session_id = urlParams.get("session_id");
+      const statusEl = document.getElementById("status");
+      const btnReload = document.getElementById("btnReload");
 
-        const tableBodyEl = document.getElementById("measurementTableBody");
-        const chartContainer = document.getElementById("chartContainer");
+      const uiSessionId = document.getElementById("uiSessionId");
+      const uiUserId = document.getElementById("uiUserId");
+      const uiSamples = document.getElementById("uiSamples");
+      const uiPoints = document.getElementById("uiPoints");
 
-        let measurements = [];
-        let chart = null;
+      let chart = null;
 
-        async function loadSessionData() {
-            try {
-                const res = await fetch(
-                    `/api/sessions/${session_id}/measurements?user_id=${user_id}`
-                );
-                const data = await res.json();
+      function setStatus(msg) {
+        statusEl.textContent = msg;
+      }
 
-                measurements = data;
-                tableBodyEl.innerHTML = "";
+      function getParamInt(name) {
+        const v = new URLSearchParams(window.location.search).get(name);
+        if (!v) return 0;
+        const n = parseInt(v, 10);
+        return Number.isFinite(n) ? n : 0;
+      }
 
-                if (data.length === 0) {
-                    tableBodyEl.innerHTML = "<tr><td colspan='3'><i>Geen metingen beschikbaar.</i></td></tr>";
-                    return;
-                }
+      function getUserId() {
+        // priority: URL ?user_id=..., else localStorage user_id
+        const fromUrl = getParamInt("user_id");
+        if (fromUrl > 0) return fromUrl;
 
-                // Tabel vullen
-                data.forEach(m => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${m.timestamp}</td>
-                        <td>${m.temperature}</td>
-                        <td>${m.phase}</td>
-                    `;
-                    tableBodyEl.appendChild(row);
-                });
+        const fromStorage = localStorage.getItem("user_id");
+        if (!fromStorage) return 0;
 
-                buildChart();
+        const n = parseInt(fromStorage, 10);
+        return Number.isFinite(n) ? n : 0;
+      }
 
-            } catch (err) {
-                console.error(err);
-                alert("Fout bij ophalen van data");
-            }
-        }
+      function getSessionId() {
+        // expects session_id in query string: session_detail.html?session_id=123
+        return getParamInt("session_id");
+      }
 
-        /* ===========================
-           📊 GRAFIEK
-        =========================== */
-        function buildChart() {
-            if (measurements.length === 0) return;
+      function normalizeRow(row) {
+        // Adapt to whatever your DB returns
+        // We try common fields: ts/timestamp/created_at and temp/temperature and event
+        const ts = row.ts ?? row.timestamp ?? row.time ?? row.created_at ?? row.createdAt ?? "";
+        const temp = row.temperature ?? row.temp ?? row.value ?? null;
+        const ev = row.event ?? "";
+        return { ts, temp, ev };
+      }
 
-            const ctx = document.getElementById("sessionChart").getContext("2d");
+      function buildChart(rows) {
+        const labels = rows.map(r => String(r.ts));
+        const temps = rows.map(r => r.temp);
 
-            if (chart) chart.destroy();
+        // Only show dots where event === "point"
+        const pointDots = rows.map(r => (r.ev === "point" ? r.temp : null));
+        const pointCount = rows.reduce((acc, r) => acc + (r.ev === "point" ? 1 : 0), 0);
 
-            const pointColors = measurements.map(m => {
-                const eventPhases = ["alarm", "start", "stop"];
-                return eventPhases.includes(m.phase.toLowerCase()) ? "red" : "blue";
-            });
+        uiSamples.textContent = String(rows.length);
+        uiPoints.textContent = String(pointCount);
 
-            chart = new Chart(ctx, {
-                type: "line",
-                data: {
-                    labels: measurements.map(m => m.timestamp),
-                    datasets: [{
-                        label: "Temperatuur (°C)",
-                        data: measurements.map(m => m.temperature),
-                        borderWidth: 2,
-                        tension: 0.25,
-                        pointBackgroundColor: pointColors,
-                        pointRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: true }
+        const ctx = document.getElementById("tempChart").getContext("2d");
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Temperature (°C)",
+                data: temps,
+                borderWidth: 2,
+                fill: false,
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                tension: 0.25
+              },
+              {
+                label: "Event: point",
+                data: pointDots,
+                showLine: false,
+                pointRadius: 6,
+                pointHoverRadius: 8
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "nearest", intersect: false },
+            plugins: {
+              legend: { display: true },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    if (context.dataset.label === "Event: point") {
+                      return "Event: point";
                     }
+                    return `Temperature: ${context.raw} °C`;
+                  }
                 }
-            });
-        }
-
-        function toggleChart() {
-            if (chartContainer.style.display === "none") {
-                chartContainer.style.display = "block";
-                setTimeout(buildChart, 50);
-            } else {
-                chartContainer.style.display = "none";
+              }
+            },
+            scales: {
+              x: { ticks: { maxTicksLimit: 10 } },
+              y: { title: { display: true, text: "°C" } }
             }
+          }
+        });
+      }
+
+      async function loadData() {
+        const sessionId = getSessionId();
+        const userId = getUserId();
+
+        uiSessionId.textContent = sessionId > 0 ? String(sessionId) : "-";
+        uiUserId.textContent = userId > 0 ? String(userId) : "-";
+
+        if (sessionId <= 0) {
+          setStatus('Missing session_id. Use session_detail.html?session_id=123 (and optionally &user_id=1)');
+          return;
+        }
+        if (userId <= 0) {
+          setStatus("Missing user_id. Add ?user_id=... or set localStorage.user_id");
+          return;
         }
 
-        /* ===========================
-           🔍 TABEL FILTER
-        =========================== */
-        function filterTable() {
-            const filter = document.getElementById("searchInput").value.toLowerCase();
-            const rows = tableBodyEl.getElementsByTagName("tr");
+        const url = `/api/sessions/${sessionId}/measurements?user_id=${encodeURIComponent(userId)}`;
 
-            for (let row of rows) {
-                row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
-            }
+        setStatus("Loading data...");
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) {
+            setStatus(`Failed to load: HTTP ${res.status}`);
+            return;
+          }
+
+          const raw = await res.json();
+          const rows = (Array.isArray(raw) ? raw : []).map(normalizeRow).filter(r => r.temp !== null);
+
+          if (rows.length === 0) {
+            setStatus("No data to show.");
+            uiSamples.textContent = "0";
+            uiPoints.textContent = "0";
+            if (chart) chart.destroy();
+            chart = null;
+            return;
+          }
+
+          buildChart(rows);
+          setStatus(`Loaded ${rows.length} samples.`);
+        } catch (e) {
+          console.error(e);
+          setStatus("Error loading data (check console).");
         }
+      }
 
-        /* ===========================
-           📥 CSV EXPORT
-        =========================== */
-        function downloadCSV() {
-            if (measurements.length === 0) return;
-
-            let csv = "timestamp,temperature,phase\n";
-            measurements.forEach(m => {
-                csv += `${m.timestamp},${m.temperature},${m.phase}\n`;
-            });
-
-            const blob = new Blob([csv], { type: "text/csv" });
-            const url = URL.createObjectURL(blob);
-
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `session_${session_id}.csv`;
-            a.click();
-
-            URL.revokeObjectURL(url);
-        }
-
-        function goBack() {
-            window.history.back();
-        }
-
-        window.onload = loadSessionData;
+      btnReload.addEventListener("click", loadData);
+      loadData();
     </script>
-
-</body>
-
+  </body>
 </html>

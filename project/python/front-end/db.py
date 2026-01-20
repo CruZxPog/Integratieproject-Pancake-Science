@@ -286,6 +286,7 @@ def get_measurements_for_session(user_id, session_id):
                 m.temperature,
                 m.phase,
                 m.timestamp
+                m.event
             FROM measurements m
             JOIN sessions s ON s.id = m.session_id
             JOIN programs p ON p.id = s.program_id
