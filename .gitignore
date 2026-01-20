@@ -420,3 +420,6 @@ FodyWeavers.xsd
 # user added ignore rules
 venv/
 project/cpp/secret.h
+nodered_data
+mariadb_data
+mosquitto
