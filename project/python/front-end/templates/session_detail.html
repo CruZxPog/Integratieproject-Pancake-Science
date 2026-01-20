@@ -114,11 +114,6 @@
             <tbody id="measurementTableBody"></tbody>
         </table>
 
-        <!-- Start-knop -->
-        <button class="action-button" id="startSessionBtn" style="display:none;">
-            Start sessie
-        </button>
-
         <button class="action-button" onclick="goBack()">Terug</button>
     </div>
 
@@ -128,7 +123,6 @@
         const session_id = urlParams.get("session_id");
 
         const tableBodyEl = document.getElementById("measurementTableBody");
-        const startSessionBtn = document.getElementById("startSessionBtn");
         const chartContainer = document.getElementById("chartContainer");
 
         let measurements = [];
@@ -136,32 +130,31 @@
 
         async function loadSessionData() {
             try {
-                const res = await fetch(`/api/sessions/${session_id}/measurements?user_id=${user_id}`);
+                const res = await fetch(
+                    `/api/sessions/${session_id}/measurements?user_id=${user_id}`
+                );
                 const data = await res.json();
 
                 measurements = data;
                 tableBodyEl.innerHTML = "";
 
                 if (data.length === 0) {
-                    startSessionBtn.style.display = "inline-block";
-                    startSessionBtn.onclick = startSessionOnArduino;
+                    tableBodyEl.innerHTML = "<tr><td colspan='3'><i>Geen metingen beschikbaar.</i></td></tr>";
                     return;
                 }
-
-                startSessionBtn.style.display = "none";
 
                 // Tabel vullen
                 data.forEach(m => {
                     const row = document.createElement("tr");
                     row.innerHTML = `
-                <td>${m.timestamp}</td>
-                <td>${m.temperature}</td>
-                <td>${m.phase}</td>
-            `;
+                        <td>${m.timestamp}</td>
+                        <td>${m.temperature}</td>
+                        <td>${m.phase}</td>
+                    `;
                     tableBodyEl.appendChild(row);
                 });
 
-                buildChart(); // grafiek opbouwen meteen zichtbaar bovenaan
+                buildChart();
 
             } catch (err) {
                 console.error(err);
@@ -170,7 +163,7 @@
         }
 
         /* ===========================
-           📊 GRAFIEK MET EVENT-KLEUR
+           📊 GRAFIEK
         =========================== */
         function buildChart() {
             if (measurements.length === 0) return;
@@ -179,9 +172,7 @@
 
             if (chart) chart.destroy();
 
-            // Datapunten kleuren: event = rood, normaal = blauw
             const pointColors = measurements.map(m => {
-                // pas dit aan afhankelijk van jouw event fases
                 const eventPhases = ["alarm", "start", "stop"];
                 return eventPhases.includes(m.phase.toLowerCase()) ? "red" : "blue";
             });
@@ -212,14 +203,14 @@
         function toggleChart() {
             if (chartContainer.style.display === "none") {
                 chartContainer.style.display = "block";
-                setTimeout(buildChart, 50); // cruciaal voor correcte rendering
+                setTimeout(buildChart, 50);
             } else {
                 chartContainer.style.display = "none";
             }
         }
 
         /* ===========================
-           🔍 TABEL ZOEKEN
+           🔍 TABEL FILTER
         =========================== */
         function filterTable() {
             const filter = document.getElementById("searchInput").value.toLowerCase();
@@ -231,7 +222,7 @@
         }
 
         /* ===========================
-           📥 CSV
+           📥 CSV EXPORT
         =========================== */
         function downloadCSV() {
             if (measurements.length === 0) return;
@@ -251,32 +242,6 @@
 
             URL.revokeObjectURL(url);
         }
-
-        async function startSessionOnArduino() {
-            try {
-                const res = await fetch(
-                    `/api/sessions/${session_id}/start?user_id=${user_id}`,
-                    { method: "POST" }
-                );
-
-                if (!res.ok) {
-                    throw new Error("HTTP " + res.status);
-                }
-
-                const data = await res.json();
-
-                if (data.status === "ok") {
-                    alert("Sessie gestart");
-                    loadSessionData();
-                } else {
-                    alert("Start sessie mislukt");
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Serverfout bij starten sessie");
-            }
-        }
-
 
         function goBack() {
             window.history.back();
