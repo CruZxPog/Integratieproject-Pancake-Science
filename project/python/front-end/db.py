@@ -319,7 +319,7 @@ def get_program_settings(user_id, program_id):
             SELECT phase, target_temperature
             FROM program_settings
             WHERE program_id = %s
-            ORDER BY phase ASC
+            ORDER BY id ASC
         """
         cursor.execute(sql, (program_id,))
         return cursor.fetchall()
