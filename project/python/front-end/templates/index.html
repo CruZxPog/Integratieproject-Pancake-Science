@@ -78,15 +78,25 @@
             const user = document.getElementById("username").value;
             const pass = document.getElementById("password").value;
             const msg = document.getElementById("message");
-            if (!user || !pass) { msg.innerText = "Vul gebruikersnaam en wachtwoord in."; return; }
+
+            if (!user || !pass) {
+                msg.innerText = "Vul gebruikersnaam en wachtwoord in.";
+                return;
+            }
 
             try {
-                const res = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: user, password: pass }) });
+                const res = await fetch("/api/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+
                 const data = await res.json();
+
                 if (data.status === "ok") {
                     localStorage.setItem("user_id", data.user.id);
                     localStorage.setItem("username", data.user.username);
-                    window.location.href = "wifi.html";
+                    window.location.href = "/wifi.html";
                 } else {
                     msg.innerText = data.message;
                 }
@@ -96,7 +106,10 @@
             }
         }
 
-        function goToCreate() { window.location.href = "create.html"; }
+        function goToCreate() {
+            // Verwijst naar Flask-route
+            window.location.href = "/create.html";
+        }
     </script>
 
 </body>

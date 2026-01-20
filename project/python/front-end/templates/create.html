@@ -40,13 +40,17 @@
         .create-container button {
             width: 100%;
             padding: 0.5rem;
-            margin-top: 1rem;
+            margin-top: 0.75rem;
             border: none;
             border-radius: 5px;
             background: #2196F3;
             color: white;
             cursor: pointer;
             font-size: 1rem;
+        }
+
+        .create-container button.back {
+            background: #4CAF50;
         }
 
         #create-message {
@@ -59,34 +63,55 @@
 <body>
     <div class="create-container">
         <h2>Maak een account aan</h2>
+
         <input type="text" id="newUser" placeholder="Gebruikersnaam">
         <input type="password" id="newPass" placeholder="Wachtwoord">
+
         <button onclick="createAccount()">Create</button>
+        <button class="back" onclick="goBack()">Terug naar login</button>
+
         <p id="create-message"></p>
     </div>
 
     <script>
         async function createAccount() {
-            const user = document.getElementById('newUser').value;
-            const pass = document.getElementById('newPass').value;
-            const msg = document.getElementById('create-message');
+            const user = document.getElementById("newUser").value;
+            const pass = document.getElementById("newPass").value;
+            const msg = document.getElementById("create-message");
 
-            if (!user || !pass) { msg.innerText = "Vul gebruikersnaam en wachtwoord in."; return; }
+            if (!user || !pass) {
+                msg.innerText = "Vul gebruikersnaam en wachtwoord in.";
+                return;
+            }
 
             try {
-                const res = await fetch("/api/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: user, password: pass }) });
+                const res = await fetch("/api/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+
                 const data = await res.json();
+
                 if (data.status === "ok") {
                     msg.style.color = "green";
                     msg.innerText = "Account aangemaakt! Je wordt teruggeleid...";
-                    setTimeout(() => { window.location.href = "/"; }, 1500);
+                    setTimeout(() => {
+                        window.location.href = "/";
+                    }, 1500);
                 } else {
+                    msg.style.color = "red";
                     msg.innerText = data.message;
                 }
+
             } catch (err) {
                 console.error(err);
                 msg.innerText = "Er ging iets mis bij registreren";
             }
+        }
+
+        function goBack() {
+            window.location.href = "/";
         }
     </script>
 </body>
