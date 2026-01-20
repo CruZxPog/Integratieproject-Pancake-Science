@@ -5,9 +5,9 @@ import paho.mqtt.client as mqtt
 
 MQTT_HOST = "127.0.0.1"
 MQTT_PORT = 1883
-MQTT_USER = "the golden flip"
-MQTT_PASS = "pannenkoek"
-TOPIC = "/wifi"
+MQTT_USER = "CHANGE_ME"
+MQTT_PASS = "CHANGE_ME"
+TOPIC = "CHANGE_ME"
 
 
 def run(cmd):
