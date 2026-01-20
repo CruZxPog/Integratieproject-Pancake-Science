@@ -1,7 +1,7 @@
 services:
   flask:
     build:
-      context: ./project/python/front-end
+      context: ./project/python
       dockerfile: Dockerfile
     container_name: flask
     restart: unless-stopped
@@ -13,7 +13,7 @@ services:
       - mariadb
       - mqtt
     volumes:
-      - ./project/python/front-end:/app
+      - ./project/python:/app
     command: python app.py
 
   mariadb:
