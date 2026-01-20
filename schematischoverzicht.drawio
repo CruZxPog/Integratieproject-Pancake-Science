@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0" version="29.3.3">
   <diagram name="Pagina-1" id="Q0kuSZSfzt10WNngjP7C">
-    <mxGraphModel dx="6852" dy="3130" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="#ffffff" math="0" shadow="0">
+    <mxGraphModel dx="4844" dy="2087" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="#ffffff" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -15,6 +15,9 @@
         </mxCell>
         <mxCell id="EAjG5wFu-H5zZDl6CqNp-64" parent="VMDylZgMVpfky3mjYlzF-50" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=light-dark(#B3B3B3,#FFFFFF);fontStyle=1" value="Technieker" vertex="1">
           <mxGeometry height="60" width="30" x="245" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="MAryIH3VwhZmwJy8Op5o-5" parent="VMDylZgMVpfky3mjYlzF-50" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;fontStyle=1;strokeColor=#b85450;" value="Gebruiker" vertex="1">
+          <mxGeometry height="60" width="30" x="400" y="79.99999999999977" as="geometry" />
         </mxCell>
         <mxCell id="zBVRnGSbRB_y-uCbFBX_-56" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#CCFFFF,#FFFFFF);strokeWidth=4;gradientColor=light-dark(#b5e2e2, #ededed);movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" value="" vertex="1">
           <mxGeometry height="720" width="1450" x="-270" y="362.07000000000005" as="geometry" />
