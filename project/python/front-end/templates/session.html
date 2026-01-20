@@ -74,9 +74,7 @@
         <h2 id="sessionTitle" style="display:none;">Sessies</h2>
         <div class="session-list" id="sessionList"></div>
 
-        <button class="action-button" id="newSessionBtn" style="display:none;">
-            Nieuwe sessie aanmaken
-        </button>
+        <!-- knop verwijderd -->
 
         <button class="action-button" onclick="goBack()">Terug naar Dashboard</button>
     </div>
@@ -87,7 +85,6 @@
         const programListEl = document.getElementById("programList");
         const sessionListEl = document.getElementById("sessionList");
         const sessionTitleEl = document.getElementById("sessionTitle");
-        const newSessionBtn = document.getElementById("newSessionBtn");
 
         let currentProgramId = null;
         let currentProgramName = "";
@@ -134,9 +131,6 @@
                 sessionTitleEl.style.display = "block";
                 sessionTitleEl.innerText = `Sessies van "${programName}"`;
 
-                newSessionBtn.style.display = "inline-block";
-                newSessionBtn.onclick = createSession;
-
                 if (sessions.length === 0) {
                     sessionListEl.innerHTML = "<i>Geen sessies gevonden voor dit programma.</i>";
                     return;
@@ -154,44 +148,6 @@
 
             } catch (err) {
                 console.error(err);
-            }
-        }
-
-        // =======================
-        // Nieuwe sessie aanmaken
-        // =======================
-        async function createSession() {
-            const sessionName = prompt("Geef een naam voor de sessie:");
-            if (!sessionName || sessionName.trim() === "") return;
-
-            try {
-                const now = new Date().toISOString(); // start_time automatisch
-
-                const res = await fetch(
-                    `/api/programs/${currentProgramId}/sessions`,
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            program_id: currentProgramId,       // program_id
-                            session_name: sessionName.trim(),   // naam sessie
-                            start_time: now,                    // huidige tijd
-                            end_time: null,                     // nog geen eindtijd
-                            user_id: user_id                     // optioneel, voor backend
-                        })
-                    }
-                );
-
-                const data = await res.json();
-
-                if (data.status === "ok") {
-                    loadSessions(currentProgramId, currentProgramName);
-                } else {
-                    alert("Kon sessie niet aanmaken: " + (data.message || "Onbekende fout"));
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Fout bij het aanmaken van de sessie.");
             }
         }
 
