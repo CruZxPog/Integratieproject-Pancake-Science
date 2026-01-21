@@ -107,7 +107,8 @@ MQTTClient mqtt(256);
 /* ===== PROGRAM SETTINGS CACHE ===== */
 struct PhaseTarget {
   char phase[16];
-  double target; // real target in C (capped <= 50)
+  double target;       // real target in C (capped <= 50)
+  uint32_t hold_time;  // seconds
 };
 
 static int currentSessionId = 0;
@@ -119,6 +120,12 @@ static uint8_t phaseCount = 0;
 static int currentPhaseIndex = 0;
 static char currentPhase[16] = "opwarmen";
 static double currentTargetTemp = NAN;
+static uint32_t currentHoldTime = 0;
+
+/* ===== HOLD TIMER STATE ===== */
+static bool holdTimerRunning = false;
+static unsigned long holdStartMillis = 0;
+static uint32_t elapsedHoldTime = 0;
 
 /* ===== SESSION + MODE ===== */
 static bool sessionArmed = false;     // got settings, waiting for start press
@@ -173,6 +180,30 @@ static double clampDouble(double v, double lo, double hi) {
   return v;
 }
 
+static void resetHoldTimer() {
+  holdTimerRunning = false;
+  holdStartMillis = 0;
+  elapsedHoldTime = 0;
+}
+
+static void updateHoldForCurrentPhase() {
+  currentHoldTime = 0;
+
+  for (uint8_t i = 0; i < phaseCount; i++) {
+    if (strcmp(phaseTargets[i].phase, currentPhase) == 0) {
+      currentHoldTime = phaseTargets[i].hold_time;
+      break;
+    }
+  }
+
+  resetHoldTimer();
+
+  Serial.print("[CFG] Phase=");
+  Serial.print(currentPhase);
+  Serial.print(" Hold=");
+  Serial.println(currentHoldTime);
+}
+
 static void updateTargetForCurrentPhase() {
   currentTargetTemp = NAN;
 
@@ -188,6 +219,8 @@ static void updateTargetForCurrentPhase() {
   Serial.print(" Target=");
   if (isfinite(currentTargetTemp)) Serial.println(currentTargetTemp);
   else Serial.println("N/A");
+
+  updateHoldForCurrentPhase();
 }
 
 static void printReceivedPhases() {
@@ -198,7 +231,9 @@ static void printReceivedPhases() {
     Serial.print(": ");
     Serial.print(phaseTargets[i].phase);
     Serial.print(" -> ");
-    Serial.println(phaseTargets[i].target, 1);
+    Serial.print(phaseTargets[i].target, 1);
+    Serial.print("C hold=");
+    Serial.println(phaseTargets[i].hold_time);
   }
 }
 
@@ -221,6 +256,8 @@ static void startSession() {
     manualTargetTemp = clampDouble(manualTargetTemp, MANUAL_MIN_C, MAX_REAL_TEMP_C);
     Serial.print("[MODE] Manual program, start target=");
     Serial.println(manualTargetTemp, 1);
+    currentHoldTime = 0;
+    resetHoldTimer();
   }
 
   // Always start with relay OFF
@@ -244,6 +281,8 @@ static void endSession() {
   // Clear targets so LCD doesn't show old values while idle
   currentTargetTemp = NAN;
   manualTargetTemp = NAN;
+  currentHoldTime = 0;
+  resetHoldTimer();
 
   strncpy(pendingEvent, "session end", sizeof(pendingEvent) - 1);
   pendingEvent[sizeof(pendingEvent) - 1] = '\0';
@@ -259,15 +298,61 @@ static double activeTargetTemp() {
   return t;
 }
 
+static void updateHoldTimer(double t, unsigned long now) {
+  if (!sessionStarted) {
+    resetHoldTimer();
+    return;
+  }
+
+  if (manualProgram) {
+    resetHoldTimer();
+    return;
+  }
+
+  if (!isfinite(t)) {
+    resetHoldTimer();
+    return;
+  }
+
+  if (!isfinite(currentTargetTemp)) {
+    resetHoldTimer();
+    return;
+  }
+
+  if (currentHoldTime == 0) {
+    resetHoldTimer();
+    return;
+  }
+
+  // within tolerance?
+  if (fabs(t - currentTargetTemp) <= TEMP_BAND_C) {
+    if (!holdTimerRunning) {
+      holdTimerRunning = true;
+      holdStartMillis = now;
+      elapsedHoldTime = 0;
+    } else {
+      elapsedHoldTime = (uint32_t)((now - holdStartMillis) / 1000UL);
+    }
+  } else {
+    resetHoldTimer();
+  }
+}
+
 static void advancePhaseIfReady(double t) {
   if (!sessionStarted) return;
   if (manualProgram) return;
   if (phaseCount == 0) return;
   if (!isfinite(t)) return;
   if (!isfinite(currentTargetTemp)) return;
-
-  if (t < currentTargetTemp) return;
   if (currentPhaseIndex >= (int)phaseCount - 1) return;
+
+  // If this phase has a hold_time, only advance when hold is completed
+  if (currentHoldTime > 0) {
+    if (elapsedHoldTime < currentHoldTime) return;
+  } else {
+    // Old behavior for phases without hold: must reach target
+    if (t < currentTargetTemp) return;
+  }
 
   currentPhaseIndex++;
 
@@ -410,7 +495,7 @@ static void publishMeasurement(unsigned long now, double temp) {
   // Publish simulated values (x2)
   double tempSim = temp * TEMP_SIM_SCALE;
 
-  StaticJsonDocument<240> doc;
+  StaticJsonDocument<320> doc;
   doc["session_id"] = currentSessionId;
   doc["temperature"] = tempSim;
 
@@ -420,6 +505,9 @@ static void publishMeasurement(unsigned long now, double temp) {
   } else {
     doc["phase"] = currentPhase;
     if (isfinite(currentTargetTemp)) doc["target_temperature"] = currentTargetTemp * TEMP_SIM_SCALE;
+
+    doc["hold_time"] = currentHoldTime;
+    doc["elapsed_hold_time"] = elapsedHoldTime;
   }
 
   // Only include event when there is a one-shot event pending
@@ -480,7 +568,7 @@ static void mqttMessageHandler(String &topic, String &payload) {
   payload.trim();
 
   if (topic == SUBSCRIBE_TOPIC) {
-    StaticJsonDocument<640> doc;
+    StaticJsonDocument<768> doc;
     DeserializationError err = deserializeJson(doc, payload);
     if (err) {
       Serial.println("[CFG] invalid JSON");
@@ -512,6 +600,7 @@ static void mqttMessageHandler(String &topic, String &payload) {
 
         const char* name = p["phase"];
         double targetSim = p["target_temperature"];
+        uint32_t holdTime = p["hold_time"] | 0;
 
         if (!name || !isfinite(targetSim)) continue;
 
@@ -522,6 +611,7 @@ static void mqttMessageHandler(String &topic, String &payload) {
         strncpy(phaseTargets[phaseCount].phase, name, 15);
         phaseTargets[phaseCount].phase[15] = '\0';
         phaseTargets[phaseCount].target = targetReal;
+        phaseTargets[phaseCount].hold_time = holdTime;
         phaseCount++;
       }
     }
@@ -544,6 +634,8 @@ static void mqttMessageHandler(String &topic, String &payload) {
       manualTargetTemp = clampDouble(manualTargetTemp, MANUAL_MIN_C, MAX_REAL_TEMP_C);
       Serial.print("[MODE] Manual program armed, target=");
       Serial.println(manualTargetTemp, 1);
+      currentHoldTime = 0;
+      resetHoldTimer();
     } else {
       currentPhaseIndex = 0;
       strncpy(currentPhase, phaseTargets[0].phase, 15);
@@ -675,7 +767,7 @@ void setup() {
 
   pinMode(PIN_ENC_EVT_SW, INPUT_PULLUP);
 
-  // Zet eerst de output-latch naar OFF niveau, dan pas OUTPUT maken
+  // Set output latch to OFF, then set OUTPUT
   digitalWrite(PIN_RELAY, RELAY_ACTIVE_HIGH ? LOW : HIGH);
   pinMode(PIN_RELAY, OUTPUT);
 
@@ -730,6 +822,9 @@ void loop() {
 
   // Sensor always reads, regardless of session state
   lastTemp = readTemperatureNonBlocking(lastTemp);
+
+  // Hold timer state (auto program only)
+  updateHoldTimer(lastTemp, now);
 
   // Auto program phase advance only while running
   advancePhaseIfReady(lastTemp);

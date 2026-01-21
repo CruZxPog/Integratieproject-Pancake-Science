@@ -131,8 +131,8 @@ def program_belongs_to_user(user_id, program_id):
 def create_program_with_settings(user_id, program_name, phases):
     """
     phases = [
-        {"phase": "heatup", "target_temperature": 180.0},
-        {"phase": "cook", "target_temperature": 195.0},
+        {"phase": "heatup", "target_temperature": 180.0, "hold_time": 0},
+        {"phase": "cook", "target_temperature": 195.0, "hold_time": 120},
         ...
     ]
 
@@ -149,13 +149,14 @@ def create_program_with_settings(user_id, program_name, phases):
 
         # 2) add phases
         sql_phase = """
-            INSERT INTO program_settings (program_id, phase, target_temperature)
-            VALUES (%s, %s, %s)
+            INSERT INTO program_settings (program_id, phase, target_temperature, hold_time)
+            VALUES (%s, %s, %s, %s)
         """
 
         for item in phases:
             phase_name = (item.get("phase") or "").strip()
             target_temp = item.get("target_temperature", None)
+            hold_time = item.get("hold_time", 0)
 
             if not phase_name:
                 raise ValueError("Phase name is required")
@@ -163,7 +164,17 @@ def create_program_with_settings(user_id, program_name, phases):
             if target_temp is None:
                 raise ValueError("Target temperature is required")
 
-            cursor.execute(sql_phase, (program_id, phase_name, float(target_temp)))
+            if hold_time is None:
+                hold_time = 0
+
+            hold_time_int = int(hold_time)
+            if hold_time_int < 0:
+                raise ValueError("hold_time must be >= 0")
+
+            cursor.execute(
+                sql_phase,
+                (program_id, phase_name, float(target_temp), hold_time_int)
+            )
 
         db.commit()
         return program_id
@@ -317,7 +328,7 @@ def get_program_settings(user_id, program_id):
 
     try:
         sql = """
-            SELECT phase, target_temperature
+            SELECT phase, target_temperature, hold_time
             FROM program_settings
             WHERE program_id = %s
             ORDER BY id ASC

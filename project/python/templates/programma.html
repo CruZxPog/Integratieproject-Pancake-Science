@@ -171,7 +171,11 @@
             renderPhases();
         }
 
-        function addPhase() { phases.push({ phase: "Nieuwe fase", target_temperature: "" }); renderPhases(); }
+        function addPhase() {
+            phases.push({ phase: "Nieuwe fase", target_temperature: "", hold_time: 0 });
+            renderPhases();
+        }
+
         function removePhase() { phases.pop(); renderPhases(); }
 
         function renderPhases() {
@@ -197,6 +201,15 @@
                 inputTemp.oninput = e => p.target_temperature = e.target.value;
                 container.appendChild(inputTemp);
 
+                const inputHold = document.createElement("input");
+                inputHold.type = "number";
+                inputHold.min = "0";
+                inputHold.step = "1";
+                inputHold.value = (p.hold_time ?? 0);
+                inputHold.placeholder = "Hold time (seconden)";
+                inputHold.oninput = e => p.hold_time = e.target.value;
+                container.appendChild(inputHold);
+
                 phasesDiv.appendChild(container);
             });
         }
@@ -204,6 +217,10 @@
         // ---------------------- OPSLAAN PROGRAMMA ----------------------
         async function saveProgram() {
             const name = prompt("Naam programma:", "Nieuw programma");
+            phases.forEach(p => {
+                p.hold_time = parseInt(p.hold_time ?? 0, 10);
+                if (isNaN(p.hold_time) || p.hold_time < 0) p.hold_time = 0;
+            });
             const data = { name, phases };
 
             const res = await fetch(`/api/programs?user_id=${user_id}`, {

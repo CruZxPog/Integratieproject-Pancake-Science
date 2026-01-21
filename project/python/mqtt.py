@@ -30,7 +30,8 @@ def publish_program_to_arduino(user_id, program_id, session_id):
         "phases": [
             {
                 "phase": row["phase"],
-                "target_temperature": float(row["target_temperature"])
+                "target_temperature": float(row["target_temperature"]),
+                "hold_time": int(row.get("hold_time", 0) or 0)
             }
             for row in phases
         ]
@@ -38,6 +39,7 @@ def publish_program_to_arduino(user_id, program_id, session_id):
 
     mqtt_publish("/cmd", payload_obj, retain=True)
     return True
+
 
 def publish_wifi_settings(ssid, password):
     payload_obj = {

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS program_settings (
   program_id INT NOT NULL,
   phase VARCHAR(50) NOT NULL,
   target_temperature FLOAT NOT NULL,
+  hold_time INT NOT NULL DEFAULT 0,
   CONSTRAINT fk_program_settings_program
     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
   UNIQUE KEY uq_program_phase (program_id, phase)
