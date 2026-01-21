@@ -49,6 +49,11 @@
             font-size: 1rem;
         }
 
+        button.skip {
+            background: #2196F3;
+            margin-top: 0.5rem;
+        }
+
         .consent {
             text-align: left;
             font-size: 0.9rem;
@@ -77,6 +82,7 @@
             <input type="checkbox" id="consent"> Ik geef toestemming om deze gegevens op te slaan.
         </div>
         <button onclick="saveWifi()">Opslaan & doorgaan</button>
+        <button class="skip" onclick="goToDashboard()">Ik ben al verbonden</button>
         <p id="message"></p>
         <p id="countdown"></p>
     </div>
@@ -141,6 +147,10 @@
                     }
                 }, 1000);
             }
+        }
+
+        function goToDashboard() {
+            window.location.href = "dashboard.html";
         }
     </script>
 </body>
