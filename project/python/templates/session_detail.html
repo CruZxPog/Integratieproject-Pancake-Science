@@ -5,162 +5,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Session detail</title>
 
-  <style>
-    /* =========================
-      BASE – sessions.html look
-    ========================== */
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-      color: #000;
-    }
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f0f0f0;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+        color: #000;
+      }
 
-    /* Header simpel houden */
-    header {
-      background: transparent;
-      border: none;
-      padding: 0;
-      margin-bottom: 20px;
-      position: static;
-    }
+      header {
+        background: transparent;
+        border: none;
+        padding: 0;
+        margin-bottom: 20px;
+        position: static;
+      }
 
-    .row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items: center;
-    }
+      .row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+      }
 
-    .title {
-      font-size: 22px;
-      font-weight: 700;
-      color: #000;
-    }
+      .title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #000;
+      }
 
-    .sub {
-      font-size: 14px;
-      color: #444;
-    }
+      .sub {
+        font-size: 14px;
+        color: #444;
+      }
 
-    .toolbar {
-      margin-top: 12px;
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-    }
+      .toolbar {
+        margin-top: 12px;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
 
-    /* Buttons – action-button stijl */
-    button {
-      padding: 1rem 2rem;
-      border: none;
-      border-radius: 8px;
-      background: #2196F3;
-      color: white;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: transform 0.2s, background 0.2s;
-    }
+      button {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 8px;
+        background: #2196F3;
+        color: white;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: transform 0.2s, background 0.2s;
+      }
 
-    button:hover {
-      transform: translateY(-3px);
-      background: #1976D2;
-    }
+      button:hover {
+        transform: translateY(-3px);
+        background: #1976D2;
+      }
 
-    a {
-      text-decoration: none;
-    }
+      a {
+        text-decoration: none;
+      }
 
-    /* Main container */
-    main {
-      max-width: 600px;
-      margin: auto;
-      padding: 0;
-    }
+      main {
+        max-width: 900px;
+        margin: auto;
+        padding: 0;
+      }
 
-    /* Card = gewone container */
-    .card {
-      background: transparent;
-      border: none;
-      box-shadow: none;
-      padding: 0;
-    }
+      .card {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+      }
 
-    /* Meta info als groene cards */
-    .meta {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
+      .meta {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin: 20px auto 0;
+        max-width: 600px;
+      }
 
-    .pill {
-      padding: 1rem;
-      border-radius: 8px;
-      background: #4CAF50;
-      color: white;
-      font-size: 1rem;
-    }
+      .pill {
+        padding: 1rem;
+        border-radius: 8px;
+        background: #4CAF50;
+        color: white;
+        font-size: 1rem;
+      }
 
-    .status {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #444;
-    }
+      .status {
+        margin-top: 14px;
+        font-size: 14px;
+        color: #444;
+      }
 
-    /* Chart */
-    .chart-wrap {
-      margin-top: 20px;
-      background: white;
-      border-radius: 8px;
-      padding: 12px;
-    }
+      .chart-wrap {
+        margin-top: 20px;
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+      }
 
-    canvas {
-      width: 100% !important;
-      height: 420px !important;
-    }
+      canvas {
+        width: 100% !important;
+        height: 420px !important;
+      }
 
-    .hint {
-      margin-top: 10px;
-      font-size: 13px;
-      color: #555;
-    }
+      .hint {
+        margin-top: 10px;
+        font-size: 13px;
+        color: #555;
+      }
 
-    code {
-      background: rgba(0, 0, 0, 0.06);
-      border: 1px solid rgba(0, 0, 0, 0.12);
-      padding: 2px 6px;
-      border-radius: 6px;
-      color: #000;
-    }
-
-    /* Extra lijststijl (indien gebruikt) */
-    .list {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    .list-item {
-      padding: 1rem;
-      border-radius: 8px;
-      background: #4CAF50;
-      color: white;
-      font-size: 1rem;
-    }
-
-    .actions-row {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      margin-top: 20px;
-    }
-  </style>
-
+      code {
+        background: rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        padding: 2px 6px;
+        border-radius: 6px;
+        color: #000;
+      }
+    </style>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   </head>
@@ -176,6 +145,7 @@
         <div class="toolbar">
           <a href="/session.html"><button type="button">Terug</button></a>
           <button id="btnReload" type="button">Reload</button>
+          <button id="btnDownloadCsv" type="button">Download CSV</button>
         </div>
       </div>
 
@@ -190,31 +160,11 @@
 
     <main>
       <div class="card">
-        <div style="font-weight: 700; margin-bottom: 6px;">Temperatuur over tijd</div>
         <div class="chart-wrap">
           <canvas id="tempChart"></canvas>
         </div>
         <div class="hint">
           De lijn heeft geen dots. Alleen metingen met <code>event = "point"</code> krijgen een dot.
-        </div>
-
-        <!-- extra: "sessions.html" look & feel blok -->
-        <div class="list" style="margin-top: 18px;">
-          <div class="list-item">
-            Session ID: <b id="uiSessionId2">-</b> | User ID: <b id="uiUserId2">-</b>
-          </div>
-          <div class="list-item">
-            Samples: <b id="uiSamples2">-</b> | Points: <b id="uiPoints2">-</b>
-          </div>
-        </div>
-
-        <div class="actions-row">
-          <button class="action-button" type="button" onclick="window.location.href='session.html'">
-            Terug naar Sessies
-          </button>
-          <button class="action-button" type="button" id="btnReload2">
-            Reload data
-          </button>
         </div>
       </div>
     </main>
@@ -222,20 +172,15 @@
     <script>
       const statusEl = document.getElementById("status");
       const btnReload = document.getElementById("btnReload");
+      const btnDownloadCsv = document.getElementById("btnDownloadCsv");
 
       const uiSessionId = document.getElementById("uiSessionId");
       const uiUserId = document.getElementById("uiUserId");
       const uiSamples = document.getElementById("uiSamples");
       const uiPoints = document.getElementById("uiPoints");
 
-      // mirrors in the green list items
-      const uiSessionId2 = document.getElementById("uiSessionId2");
-      const uiUserId2 = document.getElementById("uiUserId2");
-      const uiSamples2 = document.getElementById("uiSamples2");
-      const uiPoints2 = document.getElementById("uiPoints2");
-      const btnReload2 = document.getElementById("btnReload2");
-
       let chart = null;
+      let cachedRows = [];
 
       function setStatus(msg) {
         statusEl.textContent = msg;
@@ -270,11 +215,33 @@
         return { ts, temp, ev };
       }
 
-      function syncUiMirrors() {
-        uiSessionId2.textContent = uiSessionId.textContent;
-        uiUserId2.textContent = uiUserId.textContent;
-        uiSamples2.textContent = uiSamples.textContent;
-        uiPoints2.textContent = uiPoints.textContent;
+      function downloadCsv(rows) {
+        if (!rows || rows.length === 0) {
+          alert("Geen data om te downloaden");
+          return;
+        }
+
+        const header = ["timestamp", "temperature", "event"];
+        const csvLines = [header.join(",")];
+
+        rows.forEach(r => {
+          csvLines.push([
+            `"${String(r.ts).replaceAll('"', '""')}"`,
+            r.temp,
+            (r.ev ?? "").toString().replaceAll("\n", " ")
+          ].join(","));
+        });
+
+        const blob = new Blob([csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `session_${getSessionId()}_measurements.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
 
       function buildChart(rows) {
@@ -286,7 +253,6 @@
 
         uiSamples.textContent = String(rows.length);
         uiPoints.textContent = String(pointCount);
-        syncUiMirrors();
 
         const ctx = document.getElementById("tempChart").getContext("2d");
         if (chart) chart.destroy();
@@ -323,9 +289,7 @@
               tooltip: {
                 callbacks: {
                   label: function(context) {
-                    if (context.dataset.label === "Event: point") {
-                      return "Event: point";
-                    }
+                    if (context.dataset.label === "Event: point") return "Event: point";
                     return `Temperature: ${context.raw} °C`;
                   }
                 }
@@ -345,10 +309,9 @@
 
         uiSessionId.textContent = sessionId > 0 ? String(sessionId) : "-";
         uiUserId.textContent = userId > 0 ? String(userId) : "-";
-        syncUiMirrors();
 
         if (sessionId <= 0) {
-          setStatus('Missing session_id. Use session_detail.html?session_id=123 (and optionally &user_id=1)');
+          setStatus("Missing session_id. Use session_detail.html?session_id=123 (and optionally &user_id=1)");
           return;
         }
         if (userId <= 0) {
@@ -363,17 +326,23 @@
           const res = await fetch(url, { cache: "no-store" });
           if (!res.ok) {
             setStatus(`Failed to load: HTTP ${res.status}`);
+            cachedRows = [];
+            uiSamples.textContent = "0";
+            uiPoints.textContent = "0";
+            if (chart) chart.destroy();
+            chart = null;
             return;
           }
 
           const raw = await res.json();
           const rows = (Array.isArray(raw) ? raw : []).map(normalizeRow).filter(r => r.temp !== null);
 
+          cachedRows = rows;
+
           if (rows.length === 0) {
             setStatus("No data to show.");
             uiSamples.textContent = "0";
             uiPoints.textContent = "0";
-            syncUiMirrors();
             if (chart) chart.destroy();
             chart = null;
             return;
@@ -384,11 +353,13 @@
         } catch (e) {
           console.error(e);
           setStatus("Error loading data (check console).");
+          cachedRows = [];
         }
       }
 
       btnReload.addEventListener("click", loadData);
-      btnReload2.addEventListener("click", loadData);
+      btnDownloadCsv.addEventListener("click", () => downloadCsv(cachedRows));
+
       loadData();
     </script>
   </body>
